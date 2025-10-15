@@ -13,9 +13,13 @@ import android.widget.RemoteViews;
 import java.util.Calendar;
 
 public class CourseWidgetProvider extends AppWidgetProvider {
-    private static final String ACTION_REFRESH = "cn.pylin.xykcb.ACTION_REFRESH";
+    static final String ACTION_REFRESH = "cn.pylin.xykcb.ACTION_REFRESH";
     private static final String ACTION_LAST_DAY = "cn.pylin.xykcb.ACTION_LAST_DAY";
     private static final String ACTION_NEXT_DAY = "cn.pylin.xykcb.ACTION_NEXT_DAY";
+    private static final String ACTION_DATE_CHANGED = "android.intent.action.DATE_CHANGED";
+    private static final String ACTION_TIME_CHANGED = "android.intent.action.TIME_SET";
+    private static final String ACTION_TIMEZONE_CHANGED = "android.intent.action.TIMEZONE_CHANGED";
+    private static final String ACTION_BOOT_COMPLETED = "android.intent.action.BOOT_COMPLETED";
     private static int todayDay = getTodayDayOfWeek();
     static int currentDay = getTodayDayOfWeek();
     static int currentWeekOffset = 0; // 0表示当前周，-1表示上周，+1表示下周
@@ -72,8 +76,9 @@ public class CourseWidgetProvider extends AppWidgetProvider {
             refreshIntent.setAction(ACTION_REFRESH);
             PendingIntent refreshPendingIntent = PendingIntent.getBroadcast(
                     context, 0, refreshIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-            views.setOnClickPendingIntent(R.id.widget_week_text, refreshPendingIntent);
-            views.setOnClickPendingIntent(R.id.widget_date_text, refreshPendingIntent);
+            
+            // 为日期容器设置点击事件
+            views.setOnClickPendingIntent(R.id.widget_date_container, refreshPendingIntent);
 
             // 上一天按钮
             Intent lastDayIntent = new Intent(context, CourseWidgetProvider.class);
@@ -139,6 +144,12 @@ public class CourseWidgetProvider extends AppWidgetProvider {
                 currentDay--;
             }
             updateDay(context, currentDay);
+        } else if (ACTION_DATE_CHANGED.equals(intent.getAction()) || 
+                   ACTION_TIME_CHANGED.equals(intent.getAction()) || 
+                   ACTION_TIMEZONE_CHANGED.equals(intent.getAction()) ||
+                   ACTION_BOOT_COMPLETED.equals(intent.getAction())) {
+            android.util.Log.d("CourseWidget", "onReceive: 系统日期/时间变更，自动刷新小组件");
+            handleRefreshAction(context);
         }
     }
 
