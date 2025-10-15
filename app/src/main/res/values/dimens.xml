@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Toast相关尺寸 -->
+    <dimen name="toast_y_offset">100dp</dimen> <!-- Toast底部偏移量 -->
+    
+    <!-- 学校选择器相关尺寸资源 -->
+    <dimen name="school_item_margin">8dp</dimen>
+    <dimen name="school_item_padding">12dp</dimen>
+</resources>

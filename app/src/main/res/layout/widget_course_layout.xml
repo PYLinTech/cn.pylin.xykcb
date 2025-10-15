@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#4D000000">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:orientation="horizontal"
+        android:background="#B30052D9"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/widget_lastday"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="←"
+            android:textColor="@color/white"
+            android:textSize="18sp" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="2"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:padding="4dp">
+
+            <TextView
+                android:id="@+id/widget_week_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="第1周"
+                android:textColor="@color/white"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/widget_date_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="周一(3.15)"
+                android:textColor="@color/white"
+                android:textSize="11sp"
+                android:layout_marginTop="1dp" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/widget_nextday"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="→"
+            android:textColor="@color/white"
+            android:textSize="18sp" />
+    </LinearLayout>
+
+    <ListView
+        android:id="@+id/widget_list"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:dividerHeight="1dp"
+        android:divider="#30000000"
+        android:background="@android:color/transparent"
+        android:scrollbars="none" />
+</LinearLayout>

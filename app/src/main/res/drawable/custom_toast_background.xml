@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+
+    <!-- 设置背景颜色 - 使用半透明黑色 -->
+    <solid android:color="#80000000" />
+
+    <!-- 设置圆角 -->
+    <corners android:radius="8dp" />
+
+    <!-- 设置边框 -->
+    <stroke
+        android:width="1dp"
+        android:color="#00000000" />
+
+    <!-- 设置阴影（可选） -->
+    <padding
+        android:left="4dp"
+        android:top="4dp"
+        android:right="4dp"
+        android:bottom="4dp" />
+
+</shape>

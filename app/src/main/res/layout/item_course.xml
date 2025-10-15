@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:background="@color/course_background_color">
+
+    <!-- 时间列 -->
+    <TextView
+        android:id="@+id/time_header"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1.1"
+        android:layout_margin="2dp"
+        android:gravity="center" />
+
+    <!-- 星期列容器 -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="8.8"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+    <!-- 周一 -->
+    <cn.pylin.xykcb.CourseTextView
+        android:id="@+id/monday"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:textSize="12sp"
+        android:textColor="@color/course_text_color"
+        android:gravity="center"
+        android:layout_margin="1dp" />
+
+    <!-- 周二 -->
+    <cn.pylin.xykcb.CourseTextView
+        android:id="@+id/tuesday"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:textSize="12sp"
+        android:textColor="@color/course_text_color"
+        android:gravity="center"
+        android:layout_margin="1dp" />
+
+    <!-- 周三 -->
+    <cn.pylin.xykcb.CourseTextView
+        android:id="@+id/wednesday"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:textSize="12sp"
+        android:textColor="@color/course_text_color"
+        android:gravity="center"
+        android:layout_margin="1dp" />
+
+    <!-- 周四 -->
+    <cn.pylin.xykcb.CourseTextView
+        android:id="@+id/thursday"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:textSize="12sp"
+        android:textColor="@color/course_text_color"
+        android:gravity="center"
+        android:layout_margin="1dp" />
+
+    <!-- 周五 -->
+    <cn.pylin.xykcb.CourseTextView
+        android:id="@+id/friday"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:textSize="12sp"
+        android:textColor="@color/course_text_color"
+        android:gravity="center"
+        android:layout_margin="1dp" />
+
+    <!-- 周六 -->
+    <cn.pylin.xykcb.CourseTextView
+        android:id="@+id/saturday"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:textSize="12sp"
+        android:textColor="@color/course_text_color"
+        android:gravity="center"
+        android:layout_margin="1dp" />
+
+    <!-- 周日 -->
+    <cn.pylin.xykcb.CourseTextView
+        android:id="@+id/sunday"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:textSize="12sp"
+        android:textColor="@color/course_text_color"
+        android:gravity="center"
+        android:layout_margin="1dp" />
+    </LinearLayout>
+</LinearLayout>

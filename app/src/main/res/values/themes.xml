@@ -1,0 +1,14 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <style name="Theme.小雨课程表" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="android:windowTranslucentStatus">false</item>
+        <item name="android:statusBarColor">@color/theme_color</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:colorBackground">@color/theme_color</item>
+        <!-- 确保状态栏文字为白色 -->
+        <item name="android:windowDrawsSystemBarBackgrounds" tools:targetApi="lollipop">true</item>
+    </style>
+    <style name="DialogTheme" parent="Theme.AppCompat.Dialog.Alert">
+        <item name="android:windowBackground">@drawable/dialog_background</item>
+        <item name="android:windowIsFloating">true</item>
+    </style>
+</resources>

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="20dp">
+
+    <TextView
+        android:id="@+id/tvCourseName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="课程信息"
+        android:textStyle="bold"
+        android:textSize="24sp"
+        android:textColor="@color/dialog_title_color"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="20dp" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:id="@+id/courseContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
+
+    </ScrollView>
+
+    <Button
+        android:id="@+id/btn_close"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="关   闭"
+        android:textSize="18sp"
+        android:textColor="@color/button_text_color"
+        android:background="@drawable/button_background"
+        android:layout_marginTop="20dp" />
+    
+</LinearLayout>

@@ -1,0 +1,31 @@
+<resources>
+    <color name="theme_color">#0052D9</color>
+    <color name="dialog_background_color">#FFFFFF</color>
+    <color name="dialog_title_color">#121212</color>
+    <color name="edit_text_tip_color">#999999</color>
+    <color name="edit_text_color">#202020</color>
+    <color name="edit_background_color">#F2F4F8</color>
+    <color name="button_text_color">#FFFFFF</color>
+    <color name="button_background_color">#088f50</color>
+    <color name="info_title_color">#333333</color>
+    <color name="info_text_color">#555555</color>
+    <color name="white">#FFFFFF</color>
+    <color name="gray">#666666</color>
+    <color name="yellow">#FFF176</color>
+    <color name="progress">#4FC3F7</color>
+    <color name="black">#000000</color>
+    <!-- 原有颜色保持不变 -->
+    <!-- 新增课程颜色 -->
+    <color name="course_color_1">#F8BBD0</color>
+    <color name="course_color_2">#E1BEE7</color>
+    <color name="course_color_3">#C5CAE9</color>
+    <color name="course_color_4">#B3E5FC</color>
+    <color name="course_color_5">#B2DFDB</color>
+    <color name="course_color_6">#DCEDC8</color>
+    <color name="course_color_7">#FFCCBC</color>
+
+    <!-- 课程文字颜色 -->
+    <color name="course_text_color">#111111</color>
+    <color name="course_background_color">#F0F1FF</color>
+    <!-- res/values/colors.xml 添加小组件背景色 -->
+</resources>
