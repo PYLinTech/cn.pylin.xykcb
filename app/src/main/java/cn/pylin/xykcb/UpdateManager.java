@@ -43,6 +43,7 @@ public class UpdateManager {
     private static final String UPDATE_API_URL = "https://api.pylin.cn/xykcb_config.json";
     private final Context context;
     private final RecyclerView recyclerView;
+    private boolean isManualCheck = false; // 新添加的标志，用于跟踪是否是手动检查更新
     
     public interface UpdateCallback {
         void onUpdateCheckComplete();
@@ -63,12 +64,20 @@ public class UpdateManager {
     }
     
     public void checkForUpdates(UpdateCallback callback, boolean isManualCheck) {
-        // 如果是手动检查更新，清除已忽略的版本记录
+        // 设置是否是手动检查的标志
+        this.isManualCheck = isManualCheck;
+        
+        // 对于手动检查，我们清除已忽略的版本记录，确保用户能看到所有更新
         if (isManualCheck) {
             SharedPreferences prefs = context.getSharedPreferences("UpdatePrefs", Context.MODE_PRIVATE);
             prefs.edit().remove("ignored_version_code").apply();
         }
         
+        // 执行网络请求检查更新
+        performUpdateCheck(callback);
+    }
+    
+    private void performUpdateCheck(UpdateCallback callback) {
         OkHttpClient client = new OkHttpClient.Builder()
                 .connectTimeout(10, TimeUnit.SECONDS)
                 .readTimeout(30, TimeUnit.SECONDS)
@@ -133,17 +142,30 @@ public class UpdateManager {
         int currentVersionCode = packageInfo.versionCode;
     
         if (latestVersionCode > currentVersionCode) {
-            // 检查是否已忽略当前最新版本
-            SharedPreferences prefs = context.getSharedPreferences("UpdatePrefs", Context.MODE_PRIVATE);
-            int ignoredVersionCode = prefs.getInt("ignored_version_code", -1);
-            
-            if (latestVersionCode != ignoredVersionCode) {
-                // 只有当新版本未被忽略时才显示更新对话框
-                showUpdateDialog(downloadUrl, updateDescription, latestVersionCode);
+            // 对于自动检查更新，我们需要检查是否已忽略当前版本
+            if (!isManualCheck) {
+                SharedPreferences prefs = context.getSharedPreferences("UpdatePrefs", Context.MODE_PRIVATE);
+                int ignoredVersionCode = prefs.getInt("ignored_version_code", -1);
+                
+                // 如果是已忽略的版本，则不显示更新对话框
+                if (latestVersionCode == ignoredVersionCode) {
+                    if (callback != null) {
+                        callback.onUpdateCheckComplete();
+                    }
+                    return;
+                }
             }
+            
+            // 显示更新对话框（手动检查或未被忽略的自动更新）
+            showUpdateDialog(downloadUrl, updateDescription, latestVersionCode);
         } else {
             // 如果无需更新，清理旧的APK文件
             cleanupOldApkFiles();
+            
+            // 只在手动检查时显示"暂无更新可用"的提示
+            if (isManualCheck) {
+                CustomToast.showLongToast(context, "暂无更新可用！");
+            }
         }
         
         if (callback != null) {
@@ -211,7 +233,10 @@ public class UpdateManager {
             SharedPreferences prefs = context.getSharedPreferences("UpdatePrefs", Context.MODE_PRIVATE);
             prefs.edit().putInt("ignored_version_code", currentVersionCode).apply();
             dialog.dismiss();
-            CustomToast.showShortToast(context, "已忽略此次更新");
+            // 只有在手动检查更新时才显示Toast提示
+            if (isManualCheck) {
+                CustomToast.showShortToast(context, "已忽略此次更新");
+            }
         });
     }
     
