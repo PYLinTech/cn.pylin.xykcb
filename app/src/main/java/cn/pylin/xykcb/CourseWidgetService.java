@@ -42,6 +42,16 @@ class CourseRemoteViewsFactory implements RemoteViewsService.RemoteViewsFactory 
         // 更新数据源
         this.currentWeek = CourseDataManager.getCurrentWeek(context) + weekOffset;
         this.weeklyCourses = CourseDataManager.parseCourseData(context);
+        
+        // 从SharedPreferences获取最新的weekOffset
+        android.content.SharedPreferences prefs = context.getSharedPreferences("CourseWidgetPrefs", Context.MODE_PRIVATE);
+        int savedWeekOffset = prefs.getInt("currentWeekOffset", 0);
+        
+        // 如果保存的weekOffset与当前weekOffset不同，更新currentWeek
+        if (savedWeekOffset != weekOffset) {
+            this.currentWeek = CourseDataManager.getCurrentWeek(context) + savedWeekOffset;
+            android.util.Log.d("CourseWidgetService", "更新weekOffset从" + weekOffset + "到" + savedWeekOffset);
+        }
     }
 
     @Override
@@ -84,7 +94,10 @@ class CourseRemoteViewsFactory implements RemoteViewsService.RemoteViewsFactory 
                         views.setTextViewText(R.id.widget_course_name, courseName);
                         views.setTextViewText(R.id.widget_course_location, location);
                         views.setTextViewText(R.id.widget_course_teacher, teacher);
-
+                        
+                        // 添加调试日志
+                        android.util.Log.d("CourseWidgetService", "显示课程: " + courseName + ", 周次: " + currentWeek + ", 星期: " + (day + 1) + ", 节次: " + timeSlot);
+                        
                         break;
                     }
                 }
