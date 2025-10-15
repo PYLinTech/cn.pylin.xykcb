@@ -14,7 +14,7 @@
 
 ## 分支管理
 
-发布分支由PYLinTech维护。
+主分支及测试分支由PYLinTech维护。
 
 ## 联系我们
 
@@ -44,7 +44,7 @@ An APP that provides query of course information, schedule management and so on.
 
 ## Branch Management
 
-The Release branch is maintained by PYLinTech.
+The master branch and beta branch are maintained by PYLinTech.
 
 ## Contact Us
 
