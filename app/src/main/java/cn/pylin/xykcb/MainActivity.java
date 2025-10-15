@@ -25,14 +25,11 @@ import android.widget.LinearLayout;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.util.TypedValue;
-
-import cn.pylin.xykcb.CustomToast;
-
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
+import cn.pylin.xykcb.CustomToast;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
