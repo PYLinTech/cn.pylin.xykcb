@@ -1,6 +1,8 @@
 package cn.pylin.xykcb;
 
 import android.app.AlertDialog;
+import android.appwidget.AppWidgetManager;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -565,6 +567,34 @@ public class MainActivity extends AppCompatActivity {
         
         noteEditText.setVisibility(visible ? View.VISIBLE : View.GONE);
         appTitle.setVisibility(visible ? View.GONE : View.VISIBLE);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // 刷新小组件，使其完全更新一次
+        refreshWidget();
+    }
+
+    private void refreshWidget() {
+        // 发送广播刷新小组件
+        Intent intent = new Intent(this, CourseWidgetProvider.class);
+        intent.setAction(CourseWidgetProvider.ACTION_REFRESH);
+        sendBroadcast(intent);
+        
+        // 获取AppWidgetManager实例
+        AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this);
+        // 获取小组件的ComponentName
+        ComponentName thisAppWidget = new ComponentName(this.getPackageName(), CourseWidgetProvider.class.getName());
+        // 获取所有小组件ID
+        int[] appWidgetIds = appWidgetManager.getAppWidgetIds(thisAppWidget);
+        
+        // 如果有小组件实例，则触发更新
+        if (appWidgetIds.length > 0) {
+            // 手动调用小组件的onUpdate方法
+            CourseWidgetProvider widgetProvider = new CourseWidgetProvider();
+            widgetProvider.onUpdate(this, appWidgetManager, appWidgetIds);
+        }
     }
 
 }
