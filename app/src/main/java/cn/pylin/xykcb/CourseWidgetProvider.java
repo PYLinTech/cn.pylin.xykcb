@@ -69,6 +69,7 @@ public class CourseWidgetProvider extends AppWidgetProvider {
             Intent gridIntent = new Intent(context, CourseWidgetService.class);
             gridIntent.putExtra("appWidgetId", appWidgetId);
             gridIntent.putExtra("weekOffset", currentWeekOffset);
+            android.util.Log.d("CourseWidget", "updateAppWidget: 设置Intent weekOffset=" + currentWeekOffset);
             views.setRemoteAdapter(R.id.widget_list, gridIntent);
 
             // 周次文本点击事件 - 返回系统现在的日期
@@ -178,10 +179,15 @@ public class CourseWidgetProvider extends AppWidgetProvider {
         // 确保SharedPreferences中有当前的weekOffset
         SharedPreferences prefs = context.getSharedPreferences("CourseWidgetPrefs", Context.MODE_PRIVATE);
         prefs.edit().putInt("currentWeekOffset", currentWeekOffset).apply();
+        
+        // 记录日志以便调试
+        android.util.Log.d("CourseWidget", "updateDay: 保存weekOffset=" + currentWeekOffset + ", currentDay=" + day);
 
         AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
         ComponentName thisAppWidget = new ComponentName(context.getPackageName(), CourseWidgetProvider.class.getName());
         int[] appWidgetIds = appWidgetManager.getAppWidgetIds(thisAppWidget);
+        
+        // 先通知数据集已更改，确保Service获取最新的weekOffset
         appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetIds, R.id.widget_list);
 
         for (int appWidgetId : appWidgetIds) {
