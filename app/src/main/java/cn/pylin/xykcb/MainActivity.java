@@ -1,5 +1,6 @@
 package cn.pylin.xykcb;
 
+import android.Manifest;
 import android.app.AlertDialog;
 import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
@@ -7,10 +8,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.Color;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.InputType;
@@ -28,6 +31,7 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.util.TypedValue;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -46,6 +50,7 @@ public class MainActivity extends AppCompatActivity {
     private LoginManager loginManager;
     private UpdateManager updateManager;
     private boolean hasLoadedNetworkData = false; // 标记是否已加载网络数据
+    private Switch switchDailyCourseReminder; // 添加为成员变量，解决作用域问题
 
     @Override
     public Resources getResources() {
@@ -85,7 +90,6 @@ public class MainActivity extends AppCompatActivity {
         
         // 初始化更新管理器
         updateManager = new UpdateManager(this, recyclerView);
-        updateManager.checkForUpdates();
 
         // 然后初始化登录管理器
         loginManager = new LoginManager(this, new LoginManager.CourseDataCallback() {
@@ -140,8 +144,8 @@ public class MainActivity extends AppCompatActivity {
                     } else {
                         CustomToast.showShortToast(MainActivity.this, message);
                         
-                        // 如果错误消息是"暂不支持"，重新拉起登录窗口
-                        if (message.equals("暂不支持该学校，敬请期待")) {
+                        // 如果错误消息包含"登录失败"或"登录过期"，重新拉起登录窗口
+                        if (message.contains("登录失败") || message.contains("暂不支持")) {
                             showLoginDialog();
                         }
                     }
@@ -262,7 +266,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         tvForgetPassword.setOnClickListener(v -> {
-            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.pylin.cn/gxjwczmmdh/"));
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.pylin.cn/gxjwczmmdh"));
             startActivity(intent);
         });
 
@@ -387,15 +391,24 @@ public class MainActivity extends AppCompatActivity {
         TextView btnShowWelcome = dialogView.findViewById(R.id.btn_show_welcome);
         TextView btnJoinQQGroup = dialogView.findViewById(R.id.btn_join_qq_group);
         
+        // 获取用户信息控件
+        TextView tvUserName = dialogView.findViewById(R.id.tv_user_name);
+        TextView tvAcademyName = dialogView.findViewById(R.id.tv_academy_name);
+        TextView tvClassName = dialogView.findViewById(R.id.tv_class_name);
+        LinearLayout layoutUserInfo = (LinearLayout) tvUserName.getParent();
+        
         // 获取设置页面的切换按钮（替换原来的TextView）
         Switch switchNoteVisibilityToggle = dialogView.findViewById(R.id.switch_note_visibility_toggle);
+        Switch switchDailyCourseReminder = dialogView.findViewById(R.id.switch_daily_course_reminder);
         
         // 初始化切换按钮状态
         SharedPreferences settingsPrefs = getSharedPreferences("AppSettings", Context.MODE_PRIVATE);
         boolean noteVisible = settingsPrefs.getBoolean("note_visible", false);
+        boolean dailyReminderEnabled = settingsPrefs.getBoolean("daily_course_reminder", false);
         
         // 设置初始开关状态
         switchNoteVisibilityToggle.setChecked(noteVisible);
+        switchDailyCourseReminder.setChecked(dailyReminderEnabled);
     
         // 设置状态改变监听器
         switchNoteVisibilityToggle.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -405,11 +418,123 @@ public class MainActivity extends AppCompatActivity {
             // 立即更新备注栏显示状态
             updateNoteEditTextVisibility(isChecked);
         });
+        
+        // 设置每日课程提醒开关监听器
+        switchDailyCourseReminder.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            // 保存设置
+            settingsPrefs.edit().putBoolean("daily_course_reminder", isChecked).apply();
+            
+            // 启用或禁用每日课程提醒
+            if (isChecked) {
+                // 检查通知权限（Android 13+）
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    if (ContextCompat.checkSelfPermission(MainActivity.this, 
+                            Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                        // 请求通知权限
+                        ActivityCompat.requestPermissions(MainActivity.this, 
+                                new String[]{Manifest.permission.POST_NOTIFICATIONS}, 
+                                1001);
+                        // 暂时保存用户的选择，但先不设置通知，等权限请求结果后再处理
+                        return;
+                    }
+                }
+                
+                cn.pylin.xykcb.CourseNotificationManager.setNotificationEnabled(MainActivity.this, true);
+                CustomToast.showShortToast(MainActivity.this, "已开启每日课程提醒");
+            } else {
+                cn.pylin.xykcb.CourseNotificationManager.setNotificationEnabled(MainActivity.this, false);
+                CustomToast.showShortToast(MainActivity.this, "已关闭每日课程提醒");
+            }
+            
+            // 显示或隐藏时间选择器
+            LinearLayout layoutNotificationTime = dialogView.findViewById(R.id.layout_notification_time);
+            if (layoutNotificationTime != null) {
+                layoutNotificationTime.setVisibility(isChecked ? View.VISIBLE : View.GONE);
+            }
+        });
+        
+        // 初始化时间选择器
+        LinearLayout layoutNotificationTime = dialogView.findViewById(R.id.layout_notification_time);
+        TextView tvNotificationTime = dialogView.findViewById(R.id.tv_notification_time);
+        
+        // 设置初始时间
+        int savedHour = settingsPrefs.getInt("notification_hour", 22);
+        int savedMinute = settingsPrefs.getInt("notification_minute", 0);
+        String timeText = String.format("%02d:%02d", savedHour, savedMinute);
+        tvNotificationTime.setText(timeText);
+        
+        // 设置时间选择器点击事件
+        layoutNotificationTime.setOnClickListener(v -> {
+            android.app.TimePickerDialog timePickerDialog = new android.app.TimePickerDialog(
+                    MainActivity.this,
+                    (view, hourOfDay, minute) -> {
+                        // 保存用户选择的时间
+                        SharedPreferences.Editor editor = settingsPrefs.edit();
+                        editor.putInt("notification_hour", hourOfDay);
+                        editor.putInt("notification_minute", minute);
+                        editor.apply();
+                        
+                        // 更新显示的时间
+                        String newTimeText = String.format("%02d:%02d", hourOfDay, minute);
+                        tvNotificationTime.setText(newTimeText);
+                        
+                        // 重新设置通知时间
+                        if (cn.pylin.xykcb.CourseNotificationManager.isNotificationEnabled(MainActivity.this)) {
+                            cn.pylin.xykcb.CourseNotificationManager.cancelDailyNotification(MainActivity.this);
+                            cn.pylin.xykcb.CourseNotificationManager.setDailyNotification(MainActivity.this, hourOfDay, minute);
+                        }
+                        
+                        CustomToast.showShortToast(MainActivity.this, "通知时间已设置为 " + newTimeText);
+                    },
+                    savedHour, savedMinute, true
+            );
+            timePickerDialog.show();
+        });
+        
+        // 根据开关状态显示或隐藏时间选择器
+        layoutNotificationTime.setVisibility(dailyReminderEnabled ? View.VISIBLE : View.GONE);
 
         // 初始化用户信息
         SharedPreferences sharedPreferences = getSharedPreferences("LoginInfo", Context.MODE_PRIVATE);
         String savedUsername = sharedPreferences.getString("username", "");
+        String userName = sharedPreferences.getString("userName", "");
+        String academyName = sharedPreferences.getString("academyName", "");
+        String className = sharedPreferences.getString("className", "");
+        
         tvDescription.setText("学号：" + savedUsername);
+        
+        // 动态显示用户信息
+        boolean hasUserInfo = false;
+        if (!userName.isEmpty()) {
+            tvUserName.setText("姓名：" + userName);
+            tvUserName.setVisibility(View.VISIBLE);
+            hasUserInfo = true;
+        } else {
+            tvUserName.setVisibility(View.GONE);
+        }
+        
+        if (!academyName.isEmpty()) {
+            tvAcademyName.setText("学院：" + academyName);
+            tvAcademyName.setVisibility(View.VISIBLE);
+            hasUserInfo = true;
+        } else {
+            tvAcademyName.setVisibility(View.GONE);
+        }
+        
+        if (!className.isEmpty()) {
+            tvClassName.setText("班级：" + className);
+            tvClassName.setVisibility(View.VISIBLE);
+            hasUserInfo = true;
+        } else {
+            tvClassName.setVisibility(View.GONE);
+        }
+        
+        // 如果有用户信息，则显示用户信息区域
+        if (hasUserInfo) {
+            layoutUserInfo.setVisibility(View.VISIBLE);
+        } else {
+            layoutUserInfo.setVisibility(View.GONE);
+        }
     
         // 动态获取并设置版本信息
         try {
@@ -574,6 +699,32 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
         // 刷新小组件，使其完全更新一次
         refreshWidget();
+        // 检查更新
+        updateManager.checkForUpdates();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        
+        if (requestCode == 1001) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // 通知权限已授予，启用通知
+                cn.pylin.xykcb.CourseNotificationManager.setNotificationEnabled(this, true);
+                CustomToast.showShortToast(this, "已开启每日课程提醒");
+            } else {
+                // 通知权限被拒绝，关闭开关并提示用户
+                SharedPreferences settingsPrefs = getSharedPreferences("AppSettings", Context.MODE_PRIVATE);
+                settingsPrefs.edit().putBoolean("daily_course_reminder", false).apply();
+                
+                // 如果对话框还在显示，更新开关状态
+                if (switchDailyCourseReminder != null) {
+                    switchDailyCourseReminder.setChecked(false);
+                }
+                
+                CustomToast.showShortToast(this, "需要通知权限才能使用每日课程提醒功能");
+            }
+        }
     }
 
     private void refreshWidget() {

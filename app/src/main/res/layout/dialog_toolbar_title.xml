@@ -96,6 +96,49 @@
                         android:textSize="16sp"
                         android:padding="12dp" />
 
+                    <!-- 用户信息显示区域 -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginTop="10dp"
+                        android:layout_marginBottom="10dp"
+                        android:visibility="gone">
+
+                        <TextView
+                            android:id="@+id/tv_user_name"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="姓名：获取失败"
+                            android:textColor="@color/info_text_color"
+                            android:background="@drawable/edit_text_background"
+                            android:textSize="16sp"
+                            android:padding="12dp"
+                            android:layout_marginBottom="8dp" />
+
+                        <TextView
+                            android:id="@+id/tv_academy_name"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="学院：获取失败"
+                            android:textColor="@color/info_text_color"
+                            android:background="@drawable/edit_text_background"
+                            android:textSize="16sp"
+                            android:padding="12dp"
+                            android:layout_marginBottom="8dp" />
+
+                        <TextView
+                            android:id="@+id/tv_class_name"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="班级：获取失败"
+                            android:textColor="@color/info_text_color"
+                            android:background="@drawable/edit_text_background"
+                            android:textSize="16sp"
+                            android:padding="12dp" />
+
+                    </LinearLayout>
+
                     <Button
                         android:id="@+id/btn_reLogin"
                         android:layout_width="match_parent"
@@ -118,7 +161,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="显示设置："
+                        android:text="备注栏："
                         android:textSize="18sp"
                         android:textStyle="bold"
                         android:textColor="@color/info_title_color"
@@ -151,46 +194,65 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="其它："
+                        android:text="课程提醒："
                         android:textSize="18sp"
                         android:textStyle="bold"
                         android:textColor="@color/info_title_color"
                         android:layout_marginBottom="10dp" />
+
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
+                        android:layout_marginBottom="10dp"
                         android:background="@drawable/edit_text_background">
 
-                    <TextView
-                        android:id="@+id/btn_show_welcome"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="查看引导页面"
-                        android:textSize="16sp"
-                        android:textColor="@color/info_text_color"
-                        android:padding="12dp"
-                        android:clickable="true"
-                        android:focusable="true"/>
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="明日课程提醒"
+                            android:textSize="16sp"
+                            android:textColor="@color/info_text_color"
+                            android:padding="12dp" />
+                        <View
+                            android:layout_width="0dp"
+                            android:layout_height="0dp"
+                            android:layout_weight="1" />
+                        <Switch
+                            android:id="@+id/switch_daily_course_reminder"
+                            android:layout_width="wrap_content"
+                            android:layout_height="match_parent"
+                            android:padding="10dp" />
                     </LinearLayout>
 
                     <LinearLayout
+                        android:id="@+id/layout_notification_time"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
+                        android:layout_marginBottom="10dp"
                         android:background="@drawable/edit_text_background"
-                        android:layout_marginTop="10dp">
-
-                    <TextView
-                        android:id="@+id/btn_join_qq_group"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="加入QQ交流群"
-                        android:textSize="16sp"
-                        android:textColor="@color/info_text_color"
-                        android:padding="12dp"
+                        android:visibility="gone"
                         android:clickable="true"
-                        android:focusable="true"/>
+                        android:focusable="true">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="提醒时间"
+                            android:textSize="16sp"
+                            android:textColor="@color/info_text_color"
+                            android:padding="12dp" />
+                        <View
+                            android:layout_width="0dp"
+                            android:layout_height="0dp"
+                            android:layout_weight="1" />
+                        <TextView
+                            android:id="@+id/tv_notification_time"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="22:00"
+                            android:textSize="16sp"
+                            android:textColor="@color/info_text_color"
+                            android:padding="12dp" />
                     </LinearLayout>
 
                 </LinearLayout>
@@ -245,6 +307,53 @@
 
                     </LinearLayout>
 
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="其他："
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/info_title_color"
+                        android:layout_marginBottom="10dp"
+                        android:layout_marginTop="20dp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:background="@drawable/edit_text_background">
+
+                    <TextView
+                        android:id="@+id/btn_show_welcome"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="查看介绍页面"
+                        android:textSize="16sp"
+                        android:textColor="@color/info_text_color"
+                        android:padding="12dp"
+                        android:clickable="true"
+                        android:focusable="true"/>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:background="@drawable/edit_text_background"
+                        android:layout_marginTop="10dp">
+
+                    <TextView
+                        android:id="@+id/btn_join_qq_group"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="加入QQ交流群"
+                        android:textSize="16sp"
+                        android:textColor="@color/info_text_color"
+                        android:padding="12dp"
+                        android:clickable="true"
+                        android:focusable="true"/>
+                    </LinearLayout>
+
                     <Button
                         android:id="@+id/btn_PYLinTech"
                         android:layout_width="match_parent"
@@ -259,7 +368,7 @@
                         android:id="@+id/btn_check_update"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="检查更新"
+                        android:text="检查版本更新"
                         android:textSize="18sp"
                         android:textColor="@color/button_text_color"
                         android:background="@drawable/button_background"
