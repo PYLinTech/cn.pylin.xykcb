@@ -1,14 +1,17 @@
 package cn.pylin.xykcb;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.viewpager2.widget.ViewPager2;
 
@@ -142,9 +145,11 @@ public class WelcomeActivity extends AppCompatActivity {
         
         btnStart.setOnClickListener(v -> {
             if (!fromSettings) {
-                setFirstLaunchCompleted();
+                // 显示用户协议与隐私政策弹窗
+                showPrivacyPolicyDialog();
+            } else {
+                startMainActivity();
             }
-            startMainActivity();
         });
     }
     
@@ -152,5 +157,36 @@ public class WelcomeActivity extends AppCompatActivity {
         Intent intent = new Intent(this, MainActivity.class);
         startActivity(intent);
         finish();
+    }
+    
+    private void showPrivacyPolicyDialog() {
+        // 使用自定义布局创建AlertDialog
+        LayoutInflater inflater = LayoutInflater.from(this);
+        View dialogView = inflater.inflate(R.layout.dialog_privacy_policy, null);
+        
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setView(dialogView);
+        builder.setCancelable(false); // 禁止点击外部关闭弹窗
+        
+        AlertDialog dialog = builder.create();
+        
+        // 获取按钮并设置点击事件
+        Button btnAgree = dialogView.findViewById(R.id.btn_agree);
+        Button btnDisagree = dialogView.findViewById(R.id.btn_disagree);
+        
+        btnAgree.setOnClickListener(v -> {
+            // 用户同意，标记首次启动完成并进入主界面
+            setFirstLaunchCompleted();
+            dialog.dismiss();
+            startMainActivity();
+        });
+        
+        btnDisagree.setOnClickListener(v -> {
+            // 用户不同意，退出应用
+            dialog.dismiss();
+            finish();
+        });
+        
+        dialog.show();
     }
 }

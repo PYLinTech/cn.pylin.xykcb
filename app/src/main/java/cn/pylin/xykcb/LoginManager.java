@@ -148,9 +148,9 @@ public class LoginManager {
     private void performHnitALogin(String username, String password) {
         // 初始化 OkHttpClient
         httpClient = new OkHttpClient.Builder()
-                .connectTimeout(5, TimeUnit.SECONDS)
-                .readTimeout(5, TimeUnit.SECONDS)
-                .writeTimeout(5, TimeUnit.SECONDS)
+                .connectTimeout(10, TimeUnit.SECONDS)
+                .readTimeout(10, TimeUnit.SECONDS)
+                .writeTimeout(10, TimeUnit.SECONDS)
                 .build();
 
         String encryptedPassword = encryptPassword(password);
@@ -174,15 +174,46 @@ public class LoginManager {
                         if (responseBody != null) {
                             String responseString = responseBody.string();
                             JSONObject jsonResponse = new JSONObject(responseString);
-                            if (jsonResponse.has("data") && jsonResponse.getJSONObject("data").has("token")) {
-                                JSONObject data = jsonResponse.getJSONObject("data");
-                                String token = data.getString("token");
-                                saveLoginInfo(username, password);
-                                // 保存token用于后续获取周次
-                                SharedPreferences sharedPreferences = context.getSharedPreferences("LoginInfo", Context.MODE_PRIVATE);
-                                sharedPreferences.edit().putString("token", token).apply();
-                                getXnxqListId(token);
+                            
+                            // 获取Msg字段内容
+                            String msg = jsonResponse.optString("Msg", "");
+                            
+                            // 根据Msg内容判断登录结果
+                            if (msg.contains("成功")) {
+                                // 登录成功，检查是否有token
+                                if (jsonResponse.has("data") && jsonResponse.getJSONObject("data").has("token")) {
+                                    JSONObject data = jsonResponse.getJSONObject("data");
+                                    String token = data.getString("token");
+                                    saveLoginInfo(username, password);
+                                    // 保存token用于后续获取周次
+                                    SharedPreferences sharedPreferences = context.getSharedPreferences("LoginInfo", Context.MODE_PRIVATE);
+                                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                                    editor.putString("token", token);
+                                    
+                                    // 保存用户信息
+                                    if (data.has("name")) {
+                                        editor.putString("userName", data.getString("name"));
+                                    }
+                                    if (data.has("academyName")) {
+                                        editor.putString("academyName", data.getString("academyName"));
+                                    }
+                                    if (data.has("clsName")) {
+                                        editor.putString("className", data.getString("clsName"));
+                                    }
+                                    editor.apply();
+                                    
+                                    getXnxqListId(token);
+                                } else {
+                                    notifyError("登录失败：服务器返回异常");
+                                }
+                            } else if (msg.contains("错误")) {
+                                // 账号或密码错误
+                                notifyError("登录失败：该帐号不存在或密码错误");
+                            } else if (msg.contains("失败")) {
+                                // 登录失败
+                                notifyError("登录失败：登录失败");
                             } else {
+                                // 其他未知情况
                                 notifyError("登录失败：服务器返回异常");
                             }
                         }

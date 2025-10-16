@@ -69,5 +69,14 @@
             android:name=".CourseWidgetService"
             android:permission="android.permission.BIND_REMOTEVIEWS"
             android:exported="false"/>
+            
+        <!-- 每日课程提醒广播接收器 -->
+        <receiver android:name=".CourseNotificationManager"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="cn.pylin.xykcb.ACTION_SEND_NOTIFICATION" />
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>
