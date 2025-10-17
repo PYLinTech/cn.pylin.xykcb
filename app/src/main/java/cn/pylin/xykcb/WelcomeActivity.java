@@ -25,6 +25,9 @@ public class WelcomeActivity extends AppCompatActivity {
             R.drawable.welcome_2,
             R.drawable.welcome_3
     };
+    
+    // 定义介绍页面显示的初始值
+    private static final int INTRO_VERSION = 251017;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,7 +36,7 @@ public class WelcomeActivity extends AppCompatActivity {
         // 检查是否从设置页面进入
         boolean fromSettings = getIntent().getBooleanExtra("from_settings", false);
         
-        // 如果不是从设置页面进入，则检查是否首次启动
+        // 如果不是从设置页面进入，则检查是否需要显示介绍页面
         if (!fromSettings && !isFirstLaunch()) {
             startMainActivity();
             return;
@@ -44,21 +47,23 @@ public class WelcomeActivity extends AppCompatActivity {
         setupViewPager();
         setupClickListeners();
         
-        // 删除这部分代码，因为不再有跳过按钮
-        // if (fromSettings) {
-        //     btnSkip.setText("返回");
-        //     btnStart.setText("返回");
-        // }
     }
     
     private boolean isFirstLaunch() {
         SharedPreferences prefs = getSharedPreferences("AppSettings", Context.MODE_PRIVATE);
-        return prefs.getBoolean("isFirstLaunch", true);
+        int currentVersion = prefs.getInt("introVersion", 0);
+        // 如果本地存储的值小于初始值，则需要显示介绍页面
+        return currentVersion < INTRO_VERSION;
     }
     
     private void setFirstLaunchCompleted() {
         SharedPreferences prefs = getSharedPreferences("AppSettings", Context.MODE_PRIVATE);
-        prefs.edit().putBoolean("isFirstLaunch", false).apply();
+        prefs.edit().putInt("introVersion", INTRO_VERSION).apply();
+    }
+    
+    private void setIntroRejected() {
+        SharedPreferences prefs = getSharedPreferences("AppSettings", Context.MODE_PRIVATE);
+        prefs.edit().putInt("introVersion", 0).apply();
     }
     
     private void initViews() {
@@ -144,12 +149,8 @@ public class WelcomeActivity extends AppCompatActivity {
         });
         
         btnStart.setOnClickListener(v -> {
-            if (!fromSettings) {
-                // 显示用户协议与隐私政策弹窗
-                showPrivacyPolicyDialog();
-            } else {
-                startMainActivity();
-            }
+            // 无论是否从设置页面进入，都显示隐私政策弹窗
+            showPrivacyPolicyDialog();
         });
     }
     
@@ -174,17 +175,25 @@ public class WelcomeActivity extends AppCompatActivity {
         Button btnAgree = dialogView.findViewById(R.id.btn_agree);
         Button btnDisagree = dialogView.findViewById(R.id.btn_disagree);
         
+        // 检查是否从设置页面进入
+        boolean fromSettings = getIntent().getBooleanExtra("from_settings", false);
+        
         btnAgree.setOnClickListener(v -> {
-            // 用户同意，标记首次启动完成并进入主界面
-            setFirstLaunchCompleted();
+            if (!fromSettings) {
+                // 用户同意，保存初始值到本地存储并进入主界面
+                setFirstLaunchCompleted();
+            }
             dialog.dismiss();
             startMainActivity();
         });
         
         btnDisagree.setOnClickListener(v -> {
-            // 用户不同意，退出应用
+            // 用户不同意，保存0到本地存储并退出应用
+            SharedPreferences prefs = getSharedPreferences("AppSettings", Context.MODE_PRIVATE);
+            prefs.edit().putInt("introVersion", 0).commit(); // 使用commit()同步提交而非apply()异步提交
             dialog.dismiss();
-            finish();
+            finishAffinity(); // 关闭所有Activity
+            System.exit(0);   // 退出应用进程
         });
         
         dialog.show();

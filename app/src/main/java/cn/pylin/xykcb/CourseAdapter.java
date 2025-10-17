@@ -343,7 +343,7 @@ public class CourseAdapter extends RecyclerView.Adapter<CourseAdapter.CourseView
 
         private void showCourseInfoDialog(List<Course> courses, int dayOfWeek, int timeSlot) {
             AlertDialog.Builder builder = new AlertDialog.Builder(context, R.style.DialogTheme);
-            View dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_course_info, null);
+            View dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_main, null);
 
             TextView tvCourseName = dialogView.findViewById(R.id.tvCourseName);
             LinearLayout courseContainer = dialogView.findViewById(R.id.courseContainer);
@@ -413,7 +413,8 @@ public class CourseAdapter extends RecyclerView.Adapter<CourseAdapter.CourseView
             builder.setView(dialogView);
             AlertDialog dialog = builder.create();
             
-            // 新增：设置关闭按钮点击事件
+            // 新增：设置关闭按钮点击事件和文本
+            btnClose.setText("关闭");
             btnClose.setOnClickListener(v -> dialog.dismiss());
             
             dialog.show();

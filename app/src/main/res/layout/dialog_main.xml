@@ -9,7 +9,7 @@
         android:id="@+id/tvCourseName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="课程信息"
+        android:text="弹窗标题"
         android:textStyle="bold"
         android:textSize="24sp"
         android:textColor="@color/dialog_title_color"
@@ -35,10 +35,11 @@
         android:id="@+id/btn_close"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="关   闭"
+        android:text="按钮"
         android:textSize="18sp"
         android:textColor="@color/button_text_color"
         android:background="@drawable/button_background"
-        android:layout_marginTop="20dp" />
+        android:layout_marginTop="20dp"
+        android:layout_marginBottom="5dp"/>
     
 </LinearLayout>
