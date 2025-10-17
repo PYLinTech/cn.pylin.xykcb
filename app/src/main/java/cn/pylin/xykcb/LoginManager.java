@@ -286,8 +286,6 @@ public class LoginManager {
                 getCourseSchedule();
 
             } catch (IOException e) {
-                Log.e(TAG, "登录或获取课表失败", e);
-                notifyError("操作失败: " + e.getMessage());
             }
         }).start();
     }
@@ -350,7 +348,6 @@ public class LoginManager {
 
             return doubleBase64Encoded;
         } catch (Exception e) {
-            Log.e(TAG, "密码加密失败", e);
             return null;
         }
     }
@@ -481,17 +478,13 @@ public class LoginManager {
                             if (jsonResponse.has("nowWeek")) {
                                 String week = jsonResponse.getString("nowWeek");
                                 currentWeek = week;
-                                Log.d(TAG, "获取到当前周次: " + currentWeek);
-                                
                                 // 计算并保存每周的日期范围
                                 calculateAndSaveWeekDates(Integer.parseInt(currentWeek));
                                 
                                 // 保存当前周次到SharedPreferences
                                 SharedPreferences prefs = context.getSharedPreferences("LoginInfo", Context.MODE_PRIVATE);
                                 prefs.edit().putString("currentWeek", currentWeek).apply();
-                                
-                                // 注意：这里不直接重新加载课程数据，而是依赖外部调用来确保数据同步
-                                Log.d(TAG, "当前周次已更新，等待下次数据加载时应用");
+
                             } else {
                                 notifyError("获取当前周次失败：服务器返回数据不完整");
                                 currentWeek = "1";
@@ -555,9 +548,7 @@ public class LoginManager {
             }
             
             editor.apply();
-            Log.d(TAG, "已成功计算并保存每周的日期范围");
         } catch (Exception e) {
-            Log.e(TAG, "计算日期范围失败", e);
         }
     }
 
@@ -669,7 +660,6 @@ public class LoginManager {
             String combined = username + "%%%" + password;
             return Base64.encodeToString(combined.getBytes(StandardCharsets.UTF_8), Base64.DEFAULT).trim();
         } catch (Exception e) {
-            Log.e(TAG, "准备加密值失败", e);
             return "";
         }
     }
@@ -701,7 +691,6 @@ public class LoginManager {
                 if (endIndex != -1) {
                     String weekStr = html.substring(startIndex + 9, endIndex).trim();
                     currentWeek = weekStr;
-                    Log.d(TAG, "获取到当前周次: " + currentWeek);
                 }
             }
         }
@@ -809,7 +798,6 @@ public class LoginManager {
             return jsonData;
 
         } catch (JSONException e) {
-            Log.e(TAG, "解析HTML为JSON失败", e);
             return null;
         }
     }
@@ -875,7 +863,6 @@ public class LoginManager {
 
             return course;
         } catch (Exception e) {
-            Log.e(TAG, "解析课程信息失败", e);
             return null;
         }
     }

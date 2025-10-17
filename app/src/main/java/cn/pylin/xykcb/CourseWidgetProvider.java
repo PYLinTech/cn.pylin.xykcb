@@ -26,6 +26,9 @@ public class CourseWidgetProvider extends AppWidgetProvider {
 
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
+        // 在小组件更新时检查是否需要发送通知
+        CourseNotificationManager.checkAndSendNotification(context);
+        
         for (int appWidgetId : appWidgetIds) {
             updateAppWidget(context, appWidgetManager, appWidgetId);
         }
@@ -63,13 +66,10 @@ public class CourseWidgetProvider extends AppWidgetProvider {
         
         views.setTextViewText(R.id.widget_date_text, dayText);
 
-        android.util.Log.d("CourseWidget", "updateAppWidget: currentWeekOffset=" + currentWeekOffset + ", currentDay=" + currentDay);
-
         try {
             Intent gridIntent = new Intent(context, CourseWidgetService.class);
             gridIntent.putExtra("appWidgetId", appWidgetId);
             gridIntent.putExtra("weekOffset", currentWeekOffset);
-            android.util.Log.d("CourseWidget", "updateAppWidget: 设置Intent weekOffset=" + currentWeekOffset);
             views.setRemoteAdapter(R.id.widget_list, gridIntent);
 
             // 周次文本点击事件 - 返回系统现在的日期
@@ -113,10 +113,8 @@ public class CourseWidgetProvider extends AppWidgetProvider {
         super.onReceive(context, intent);
 
         if (ACTION_REFRESH.equals(intent.getAction())) {
-            android.util.Log.d("CourseWidget", "onReceive: ACTION_REFRESH");
             handleRefreshAction(context);
         } else if (ACTION_NEXT_DAY.equals(intent.getAction())) {
-            android.util.Log.d("CourseWidget", "onReceive: ACTION_NEXT_DAY, currentDay=" + currentDay);
             // 实现周日点击下一天到下一周周一
             if (currentDay == 7) { // 周日
                 // 检查是否已经是第24周，不允许切换到第25周
@@ -124,14 +122,12 @@ public class CourseWidgetProvider extends AppWidgetProvider {
                 if (currentWeek + currentWeekOffset < 24) {
                     currentWeekOffset++;
                     currentDay = 1; // 切换到下一周周一
-                    android.util.Log.d("CourseWidget", "切换到下一周周一，currentWeekOffset=" + currentWeekOffset);
                 }
             } else {
                 currentDay++;
             }
             updateDay(context, currentDay);
         } else if (ACTION_LAST_DAY.equals(intent.getAction())) {
-            android.util.Log.d("CourseWidget", "onReceive: ACTION_LAST_DAY, currentDay=" + currentDay);
             // 实现周一点击上一天到上一周周日
             if (currentDay == 1) { // 周一
                 // 检查是否已经是第1周，不允许切换到第0周
@@ -139,7 +135,6 @@ public class CourseWidgetProvider extends AppWidgetProvider {
                 if (currentWeek + currentWeekOffset > 1) {
                     currentWeekOffset--;
                     currentDay = 7; // 切换到上一周周日
-                    android.util.Log.d("CourseWidget", "切换到上一周周日，currentWeekOffset=" + currentWeekOffset);
                 }
             } else {
                 currentDay--;
@@ -149,7 +144,6 @@ public class CourseWidgetProvider extends AppWidgetProvider {
                    ACTION_TIME_CHANGED.equals(intent.getAction()) || 
                    ACTION_TIMEZONE_CHANGED.equals(intent.getAction()) ||
                    ACTION_BOOT_COMPLETED.equals(intent.getAction())) {
-            android.util.Log.d("CourseWidget", "onReceive: 系统日期/时间变更，自动刷新小组件");
             handleRefreshAction(context);
         }
     }
@@ -163,6 +157,10 @@ public class CourseWidgetProvider extends AppWidgetProvider {
         AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
         ComponentName thisAppWidget = new ComponentName(context.getPackageName(), CourseWidgetProvider.class.getName());
         int[] appWidgetIds = appWidgetManager.getAppWidgetIds(thisAppWidget);
+        
+        // 在刷新时检查是否需要发送通知
+        CourseNotificationManager.checkAndSendNotification(context);
+        
         onUpdate(context, appWidgetManager, appWidgetIds);
     }
 
@@ -179,9 +177,6 @@ public class CourseWidgetProvider extends AppWidgetProvider {
         // 确保SharedPreferences中有当前的weekOffset
         SharedPreferences prefs = context.getSharedPreferences("CourseWidgetPrefs", Context.MODE_PRIVATE);
         prefs.edit().putInt("currentWeekOffset", currentWeekOffset).apply();
-        
-        // 记录日志以便调试
-        android.util.Log.d("CourseWidget", "updateDay: 保存weekOffset=" + currentWeekOffset + ", currentDay=" + day);
 
         AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
         ComponentName thisAppWidget = new ComponentName(context.getPackageName(), CourseWidgetProvider.class.getName());

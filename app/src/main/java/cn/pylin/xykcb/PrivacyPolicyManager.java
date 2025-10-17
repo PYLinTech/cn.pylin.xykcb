@@ -14,12 +14,154 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import java.io.File;
+import java.io.IOException;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 /**
  * 隐私政策管理工具类
  * 提供弹窗提示和数据清除的公共方法
  */
 public class PrivacyPolicyManager {
+    
+    // 用户协议API地址
+    private static final String USER_AGREEMENT_API_URL = "https://api.pylin.cn/xykcb_agreement.json";
+    
+    // 隐私政策API地址
+    private static final String PRIVACY_POLICY_API_URL = "https://api.pylin.cn/xykcb_privacy.json";
+    
+    // 默认内容（当联网加载失败时显示）
+    private static final String DEFAULT_USER_AGREEMENT_CONTENT = "加载失败，点击进入官网查看！";
+    private static final String DEFAULT_PRIVACY_POLICY_CONTENT = "加载失败，点击进入官网查看！";
+    
+    /**
+     * 联网加载用户协议内容
+     * @param callback 加载完成回调
+     */
+    public static void loadUserAgreementContent(PrivacyPolicyCallback callback) {
+        OkHttpClient client = new OkHttpClient.Builder()
+                .connectTimeout(10, java.util.concurrent.TimeUnit.SECONDS)
+                .readTimeout(10, java.util.concurrent.TimeUnit.SECONDS)
+                .build();
+        
+        Request request = new Request.Builder()
+                .url(USER_AGREEMENT_API_URL)
+                .build();
+        
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                // 网络请求失败，使用默认内容并记录错误
+                android.util.Log.e("PrivacyPolicyManager", "用户协议网络请求失败: " + e.getMessage());
+                if (callback != null) {
+                    callback.onPolicyLoaded(DEFAULT_USER_AGREEMENT_CONTENT);
+                }
+            }
+            
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                try {
+                    if (response.isSuccessful() && response.body() != null) {
+                        String content = response.body().string();
+                        // 检查内容是否为空或过短
+                        if (content != null && content.trim().length() > 10) {
+                            if (callback != null) {
+                                callback.onPolicyLoaded(content);
+                            }
+                        } else {
+                            // 内容无效，使用默认内容
+                            android.util.Log.w("PrivacyPolicyManager", "用户协议内容无效或过短");
+                            if (callback != null) {
+                                callback.onPolicyLoaded(DEFAULT_USER_AGREEMENT_CONTENT);
+                            }
+                        }
+                    } else {
+                        // 服务器响应失败，使用默认内容
+                        android.util.Log.e("PrivacyPolicyManager", "用户协议服务器响应失败，状态码: " + response.code());
+                        if (callback != null) {
+                            callback.onPolicyLoaded(DEFAULT_USER_AGREEMENT_CONTENT);
+                        }
+                    }
+                } catch (Exception e) {
+                    // 处理解析异常
+                    android.util.Log.e("PrivacyPolicyManager", "用户协议解析响应时发生异常: " + e.getMessage());
+                    if (callback != null) {
+                        callback.onPolicyLoaded(DEFAULT_USER_AGREEMENT_CONTENT);
+                    }
+                }
+            }
+        });
+    }
+    
+    /**
+     * 联网加载隐私政策内容
+     * @param callback 加载完成回调
+     */
+    public static void loadPrivacyPolicyContent(PrivacyPolicyCallback callback) {
+        OkHttpClient client = new OkHttpClient.Builder()
+                .connectTimeout(10, java.util.concurrent.TimeUnit.SECONDS)
+                .readTimeout(10, java.util.concurrent.TimeUnit.SECONDS)
+                .build();
+        
+        Request request = new Request.Builder()
+                .url(PRIVACY_POLICY_API_URL)
+                .build();
+        
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                // 网络请求失败，使用默认内容并记录错误
+                android.util.Log.e("PrivacyPolicyManager", "隐私政策网络请求失败: " + e.getMessage());
+                if (callback != null) {
+                    callback.onPolicyLoaded(DEFAULT_PRIVACY_POLICY_CONTENT);
+                }
+            }
+            
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                try {
+                    if (response.isSuccessful() && response.body() != null) {
+                        String content = response.body().string();
+                        // 检查内容是否为空或过短
+                        if (content != null && content.trim().length() > 10) {
+                            if (callback != null) {
+                                callback.onPolicyLoaded(content);
+                            }
+                        } else {
+                            // 内容无效，使用默认内容
+                            android.util.Log.w("PrivacyPolicyManager", "隐私政策内容无效或过短");
+                            if (callback != null) {
+                                callback.onPolicyLoaded(DEFAULT_PRIVACY_POLICY_CONTENT);
+                            }
+                        }
+                    } else {
+                        // 服务器响应失败，使用默认内容
+                        android.util.Log.e("PrivacyPolicyManager", "隐私政策服务器响应失败，状态码: " + response.code());
+                        if (callback != null) {
+                            callback.onPolicyLoaded(DEFAULT_PRIVACY_POLICY_CONTENT);
+                        }
+                    }
+                } catch (Exception e) {
+                    // 处理解析异常
+                    android.util.Log.e("PrivacyPolicyManager", "隐私政策解析响应时发生异常: " + e.getMessage());
+                    if (callback != null) {
+                        callback.onPolicyLoaded(DEFAULT_PRIVACY_POLICY_CONTENT);
+                    }
+                }
+            }
+        });
+    }
+    
+    /**
+     * 隐私政策加载回调接口
+     */
+    public interface PrivacyPolicyCallback {
+        void onPolicyLoaded(String content);
+    }
     
     /**
      * 显示撤销同意确认弹窗
@@ -28,52 +170,11 @@ public class PrivacyPolicyManager {
      */
     public static void showRevokeConsentDialog(Activity activity, Runnable onCancelCallback) {
         AlertDialog.Builder confirmBuilder = new AlertDialog.Builder(activity, R.style.DialogTheme);
-        View confirmView = LayoutInflater.from(activity).inflate(R.layout.dialog_main, null);
+        View confirmView = LayoutInflater.from(activity).inflate(R.layout.dialog_revoke_consent, null);
         
-        // 设置标题和内容
-        TextView tvTitle = confirmView.findViewById(R.id.tvCourseName);
-        tvTitle.setText("确认撤销？");
-        
-        // 获取内容容器并添加消息
-        LinearLayout contentContainer = confirmView.findViewById(R.id.courseContainer);
-        TextView tvMessage = new TextView(activity);
-        tvMessage.setText("撤销同意《小雨课程表用户协议及隐私政策》将清除本应用的所有数据并退出，是否继续？");
-        tvMessage.setTextSize(16);
-        tvMessage.setTextColor(activity.getResources().getColor(R.color.info_text_color));
-        tvMessage.setPadding(0, 0, 0, 20);
-        contentContainer.addView(tvMessage);
-        
-        // 设置按钮
-        Button btnConfirm = confirmView.findViewById(R.id.btn_close);
-        btnConfirm.setText("确认撤销");
-        // 以代码形式设置确认按钮的背景颜色为红色
-        GradientDrawable confirmBackground = new GradientDrawable();
-        confirmBackground.setShape(GradientDrawable.RECTANGLE);
-        confirmBackground.setColor(Color.parseColor("#FF5252")); // 红色背景
-        confirmBackground.setCornerRadius(10);
-        btnConfirm.setBackground(confirmBackground);
-        btnConfirm.setTextColor(Color.WHITE); // 白色文字
-        
-        // 添加取消按钮
-        Button btnCancel = new Button(activity);
-        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT);
-        params.setMargins(0, 10, 0, 0);
-        btnCancel.setLayoutParams(params);
-        btnCancel.setText("取消");
-        btnCancel.setTextSize(18);
-        // 以代码形式设置取消按钮的背景颜色为灰色
-        GradientDrawable cancelBackground = new GradientDrawable();
-        cancelBackground.setShape(GradientDrawable.RECTANGLE);
-        cancelBackground.setColor(Color.parseColor("#757575")); // 灰色背景
-        cancelBackground.setCornerRadius(10);
-        btnCancel.setBackground(cancelBackground);
-        btnCancel.setTextColor(Color.WHITE); // 白色文字
-        
-        // 将取消按钮添加到对话框底部
-        LinearLayout rootLayout = (LinearLayout) confirmView;
-        rootLayout.addView(btnCancel);
+        // 获取按钮
+        Button btnConfirm = confirmView.findViewById(R.id.btn_confirm_revoke);
+        Button btnCancel = confirmView.findViewById(R.id.btn_cancel_revoke);
         
         confirmBuilder.setView(confirmView);
         AlertDialog confirmDialog = confirmBuilder.create();
@@ -172,52 +273,11 @@ public class PrivacyPolicyManager {
      */
     public static void showDisagreeDialog(Activity activity) {
         AlertDialog.Builder confirmBuilder = new AlertDialog.Builder(activity, R.style.DialogTheme);
-        View confirmView = LayoutInflater.from(activity).inflate(R.layout.dialog_main, null);
+        View confirmView = LayoutInflater.from(activity).inflate(R.layout.dialog_disagree_confirm, null);
         
-        // 设置标题和内容
-        TextView tvTitle = confirmView.findViewById(R.id.tvCourseName);
-        tvTitle.setText("提示");
-        
-        // 获取内容容器并添加消息
-        LinearLayout contentContainer = confirmView.findViewById(R.id.courseContainer);
-        TextView tvMessage = new TextView(activity);
-        tvMessage.setText("不同意《小雨课程表用户协议及隐私政策》将清除本应用的所有数据并退出，是否继续？");
-        tvMessage.setTextSize(16);
-        tvMessage.setTextColor(activity.getResources().getColor(R.color.info_text_color));
-        tvMessage.setPadding(0, 0, 0, 20);
-        contentContainer.addView(tvMessage);
-        
-        // 设置按钮
-        Button btnConfirm = confirmView.findViewById(R.id.btn_close);
-        btnConfirm.setText("不同意并退出");
-        // 以代码形式设置确认按钮的背景颜色为红色
-        GradientDrawable confirmBackground = new GradientDrawable();
-        confirmBackground.setShape(GradientDrawable.RECTANGLE);
-        confirmBackground.setColor(Color.parseColor("#FF5252")); // 红色背景
-        confirmBackground.setCornerRadius(15);
-        btnConfirm.setBackground(confirmBackground);
-        btnConfirm.setTextColor(Color.WHITE); // 白色文字
-        
-        // 添加取消按钮
-        Button btnCancel = new Button(activity);
-        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT);
-        params.setMargins(0, 10, 0, 0);
-        btnCancel.setLayoutParams(params);
-        btnCancel.setText("取消");
-        btnCancel.setTextSize(18);
-        // 以代码形式设置取消按钮的背景颜色为灰色
-        GradientDrawable cancelBackground = new GradientDrawable();
-        cancelBackground.setShape(GradientDrawable.RECTANGLE);
-        cancelBackground.setColor(Color.parseColor("#757575")); // 灰色背景
-        cancelBackground.setCornerRadius(15);
-        btnCancel.setBackground(cancelBackground);
-        btnCancel.setTextColor(Color.WHITE); // 白色文字
-        
-        // 将取消按钮添加到对话框底部
-        LinearLayout rootLayout = (LinearLayout) confirmView;
-        rootLayout.addView(btnCancel);
+        // 获取按钮
+        Button btnConfirm = confirmView.findViewById(R.id.btn_confirm_disagree);
+        Button btnCancel = confirmView.findViewById(R.id.btn_cancel_disagree);
         
         confirmBuilder.setView(confirmView);
         AlertDialog confirmDialog = confirmBuilder.create();
