@@ -29,7 +29,7 @@ public class WelcomeActivity extends AppCompatActivity {
     };
     
     // 定义介绍页面显示的初始值
-    private static final int INTRO_VERSION = 251017;
+    private static final int INTRO_VERSION = 251018;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

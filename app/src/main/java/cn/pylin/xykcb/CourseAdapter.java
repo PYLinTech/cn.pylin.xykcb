@@ -27,8 +27,11 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
 public class CourseAdapter extends RecyclerView.Adapter<CourseAdapter.CourseViewHolder> {
     private List<List<Course>> weeklyCourses;
@@ -89,15 +92,138 @@ public class CourseAdapter extends RecyclerView.Adapter<CourseAdapter.CourseView
     }
 
     private void assignCourseColors() {
-        for (List<Course> dayCourses : weeklyCourses) {
-            for (Course course : dayCourses) {
+        // 优化后的颜色分配算法，避免相同颜色聚集
+        Map<String, Set<Integer>> coursePositionMap = new HashMap<>(); // 记录每门课程的位置
+        
+        // 第一步：收集所有课程名称和位置信息
+        Set<String> allCourseNames = new HashSet<>();
+        for (int day = 0; day < weeklyCourses.size(); day++) {
+            for (Course course : weeklyCourses.get(day)) {
                 String courseName = course.getCourseName();
-                if (!courseColors.containsKey(courseName)) {
-                    int colorIndex = new Random().nextInt(colorPalette.length);
-                    courseColors.put(courseName, colorPalette[colorIndex]);
+                allCourseNames.add(courseName);
+                
+                // 记录课程位置
+                if (!coursePositionMap.containsKey(courseName)) {
+                    coursePositionMap.put(courseName, new HashSet<>());
+                }
+                
+                // 添加课程的所有时间段位置
+                for (int timeSlot = 1; timeSlot <= 5; timeSlot++) {
+                    if (course.isInTimeSlot(day + 1, timeSlot)) {
+                        coursePositionMap.get(courseName).add(day * 10 + timeSlot); // 用day*10+timeSlot作为唯一位置标识
+                    }
                 }
             }
         }
+        
+        // 第二步：为每门课程分配颜色，确保相邻课程颜色不同
+        List<String> courseList = new ArrayList<>(allCourseNames);
+        
+        // 按课程出现次数排序，先处理出现次数多的课程
+        courseList.sort((a, b) -> coursePositionMap.get(b).size() - coursePositionMap.get(a).size());
+        
+        for (String courseName : courseList) {
+            if (!courseColors.containsKey(courseName)) {
+                // 获取已分配颜色的课程及其位置
+                Map<String, Set<Integer>> coloredCoursePositions = new HashMap<>();
+                for (Map.Entry<String, Integer> entry : courseColors.entrySet()) {
+                    String coloredCourse = entry.getKey();
+                    if (coursePositionMap.containsKey(coloredCourse)) {
+                        coloredCoursePositions.put(coloredCourse, coursePositionMap.get(coloredCourse));
+                    }
+                }
+                
+                // 选择最优颜色
+                int selectedColorIndex = selectOptimalColor(courseName, coursePositionMap.get(courseName), coloredCoursePositions);
+                courseColors.put(courseName, colorPalette[selectedColorIndex]);
+            }
+        }
+    }
+    
+    // 选择最优颜色：优先选择与相邻课程不同的颜色
+    private int selectOptimalColor(String courseName, Set<Integer> coursePositions, Map<String, Set<Integer>> coloredCoursePositions) {
+        // 统计每种颜色的冲突分数（与相邻课程同色）
+        int[] colorConflictScore = new int[colorPalette.length];
+        // 统计每种颜色的使用次数
+        int[] colorUsageCount = new int[colorPalette.length];
+        
+        // 初始化数组
+        for (int i = 0; i < colorPalette.length; i++) {
+            colorConflictScore[i] = 0;
+            colorUsageCount[i] = 0;
+        }
+        
+        // 计算每种颜色的使用次数
+        for (Map.Entry<String, Integer> entry : courseColors.entrySet()) {
+            for (int i = 0; i < colorPalette.length; i++) {
+                if (entry.getValue().equals(colorPalette[i])) {
+                    colorUsageCount[i]++;
+                    break;
+                }
+            }
+        }
+        
+        // 计算每种颜色的冲突分数
+        for (Map.Entry<String, Set<Integer>> entry : coloredCoursePositions.entrySet()) {
+            String coloredCourse = entry.getKey();
+            Set<Integer> coloredPositions = entry.getValue();
+            int coloredColorIndex = -1;
+            
+            // 找到已着色课程的颜色索引
+            for (int i = 0; i < colorPalette.length; i++) {
+                if (courseColors.get(coloredCourse).equals(colorPalette[i])) {
+                    coloredColorIndex = i;
+                    break;
+                }
+            }
+            
+            if (coloredColorIndex >= 0) {
+                // 检查位置是否相邻
+                for (int pos1 : coursePositions) {
+                    for (int pos2 : coloredPositions) {
+                        if (arePositionsAdjacent(pos1, pos2)) {
+                            colorConflictScore[coloredColorIndex]++;
+                        }
+                    }
+                }
+            }
+        }
+        
+        // 选择冲突分数最低且使用次数较少的颜色
+        int bestColorIndex = 0;
+        int bestScore = Integer.MAX_VALUE;
+        
+        for (int i = 0; i < colorPalette.length; i++) {
+            // 综合考虑冲突分数和使用次数，冲突分数权重更高
+            int currentScore = colorConflictScore[i] * 100 + colorUsageCount[i];
+            
+            if (currentScore < bestScore) {
+                bestScore = currentScore;
+                bestColorIndex = i;
+            }
+        }
+        
+        return bestColorIndex;
+    }
+    
+    // 判断两个位置是否相邻（同一时间段、同一列或同一行）
+    private boolean arePositionsAdjacent(int pos1, int pos2) {
+        int day1 = pos1 / 10;
+        int time1 = pos1 % 10;
+        int day2 = pos2 / 10;
+        int time2 = pos2 % 10;
+        
+        // 同一时间段（水平相邻）
+        if (time1 == time2 && Math.abs(day1 - day2) <= 1) {
+            return true;
+        }
+        
+        // 同一天（垂直相邻）
+        if (day1 == day2 && Math.abs(time1 - time2) <= 1) {
+            return true;
+        }
+        
+        return false;
     }
 
     @NonNull

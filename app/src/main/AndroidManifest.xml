@@ -71,7 +71,7 @@
             android:permission="android.permission.BIND_REMOTEVIEWS"
             android:exported="false"/>
             
-        <!-- 每日课程提醒广播接收器 -->
+        <!-- 明日课程提醒广播接收器 -->
         <receiver android:name=".CourseNotificationManager"
             android:enabled="true"
             android:exported="false">
