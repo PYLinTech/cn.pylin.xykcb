@@ -8,7 +8,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="用户协议及隐私政策"
+        android:text="提示"
         android:textStyle="bold"
         android:textSize="24sp"
         android:textColor="@color/dialog_title_color"
@@ -27,46 +27,12 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <!-- 用户协议标题 -->
             <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="用户协议："
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:textColor="@color/info_title_color"
-                android:layout_marginBottom="10dp" />
-
-            <!-- 用户协议内容框 -->
-            <TextView
-                android:id="@+id/tv_user_agreement"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="正在加载用户协议内容..."
+                android:text="如果您不同意\n《小雨课程表用户协议》\n《小雨课程表隐私政策》\n将清除本应用的所有数据并退出，\n是否继续？"
                 android:textColor="@color/info_text_color"
-                android:textSize="14sp"
-                android:padding="12dp"
-                android:background="@drawable/edit_text_background"
-                android:layout_marginBottom="20dp" />
-
-            <!-- 隐私政策标题 -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="隐私政策："
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:textColor="@color/info_title_color"
-                android:layout_marginBottom="10dp" />
-
-            <!-- 隐私政策内容框 -->
-            <TextView
-                android:id="@+id/tv_privacy_policy"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="正在加载隐私政策内容..."
-                android:textColor="@color/info_text_color"
-                android:textSize="14sp"
+                android:textSize="16sp"
                 android:padding="12dp"
                 android:background="@drawable/edit_text_background"
                 android:layout_marginBottom="20dp" />
@@ -76,22 +42,23 @@
     </ScrollView>
 
     <Button
-        android:id="@+id/btn_agree"
+        android:id="@+id/btn_confirm_disagree"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
         android:layout_marginBottom="10dp"
-        android:text="同意并进入"
+        android:text="不同意并退出"
         android:textSize="18sp"
         android:background="@drawable/button_background"
-        android:textColor="@color/button_text_color" />
+        android:textColor="@color/white"
+        android:backgroundTint="@color/red" />
 
     <Button
-        android:id="@+id/btn_disagree"
+        android:id="@+id/btn_cancel_disagree"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="5dp"
-        android:text="不同意并退出"
+        android:text="取消"
         android:textSize="18sp"
         android:background="@drawable/button_background"
         android:textColor="@color/white"

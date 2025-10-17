@@ -1,11 +1,9 @@
 package cn.pylin.xykcb;
 
-import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -17,18 +15,12 @@ import androidx.core.app.NotificationCompat;
 import java.util.Calendar;
 import java.util.List;
 
-public class CourseNotificationManager extends BroadcastReceiver {
+public class CourseNotificationManager {
     private static final String CHANNEL_ID = "course_reminder_channel";
     private static final String CHANNEL_NAME = "课程提醒";
     private static final int NOTIFICATION_ID = 1;
-    private static final String ACTION_SEND_NOTIFICATION = "cn.pylin.xykcb.ACTION_SEND_NOTIFICATION";
-    
-    @Override
-    public void onReceive(Context context, Intent intent) {
-        if (ACTION_SEND_NOTIFICATION.equals(intent.getAction())) {
-            sendDailyNotification(context);
-        }
-    }
+    private static final String PREF_LAST_NOTIFICATION_TIME = "last_notification_time";
+    private static final long HALF_HOUR_MILLIS = 30 * 60 * 1000; // 半小时的毫秒数
     
     /**
      * 初始化通知渠道
@@ -49,100 +41,49 @@ public class CourseNotificationManager extends BroadcastReceiver {
     }
     
     /**
-     * 设置每日定时通知
+     * 检查是否需要发送通知（在小组件刷新时调用）
      */
-    public static void setDailyNotification(Context context, int hour, int minute) {
-        AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-        Intent intent = new Intent(context, CourseNotificationManager.class);
-        intent.setAction(ACTION_SEND_NOTIFICATION);
-        
-        PendingIntent pendingIntent;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            // Android 12及以上需要指定FLAG_IMMUTABLE或FLAG_MUTABLE
-            pendingIntent = PendingIntent.getBroadcast(
-                    context, 
-                    0, 
-                    intent, 
-                    PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
-            );
-        } else {
-            pendingIntent = PendingIntent.getBroadcast(
-                    context, 
-                    0, 
-                    intent, 
-                    PendingIntent.FLAG_UPDATE_CURRENT
-            );
+    public static void checkAndSendNotification(Context context) {
+        // 检查通知功能是否启用
+        if (!isNotificationEnabled(context)) {
+            return;
         }
         
-        // 设置指定时间触发
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTimeInMillis(System.currentTimeMillis());
-        calendar.set(Calendar.HOUR_OF_DAY, hour);
-        calendar.set(Calendar.MINUTE, minute);
-        calendar.set(Calendar.SECOND, 0);
-        
-        // 如果当前时间已经过了设置的时间，设置为明天的同一时间
-        if (calendar.getTimeInMillis() <= System.currentTimeMillis()) {
-            calendar.add(Calendar.DAY_OF_YEAR, 1);
+        // 检查通知权限
+        if (!areNotificationsEnabled(context)) {
+            return;
         }
         
-        try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                alarmManager.setExactAndAllowWhileIdle(
-                        AlarmManager.RTC_WAKEUP,
-                        calendar.getTimeInMillis(),
-                        pendingIntent
-                );
-            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                alarmManager.setExact(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
+        // 获取用户设置的提醒时间
+        SharedPreferences prefs = context.getSharedPreferences("AppSettings", Context.MODE_PRIVATE);
+        int hour = prefs.getInt("notification_hour", 22);
+        int minute = prefs.getInt("notification_minute", 0);
+        
+        // 获取当前时间
+        Calendar now = Calendar.getInstance();
+        int currentHour = now.get(Calendar.HOUR_OF_DAY);
+        int currentMinute = now.get(Calendar.MINUTE);
+        
+        // 计算当前时间与设定时间的分钟差
+        int currentTotalMinutes = currentHour * 60 + currentMinute;
+        int targetTotalMinutes = hour * 60 + minute;
+        int timeDiffMinutes = Math.abs(currentTotalMinutes - targetTotalMinutes);
+        
+        // 检查是否接近设定时间（半小时内）
+        if (timeDiffMinutes <= 30) {
+            // 检查上一次通知时间
+            long lastNotificationTime = prefs.getLong(PREF_LAST_NOTIFICATION_TIME, 0);
+            long currentTime = System.currentTimeMillis();
+            
+            // 如果离上一次通知超过半小时，则发送通知
+            if (currentTime - lastNotificationTime > HALF_HOUR_MILLIS) {
+                sendDailyNotification(context);
+                
+                // 保存通知时间
+                prefs.edit().putLong(PREF_LAST_NOTIFICATION_TIME, currentTime).apply();
             } else {
-                alarmManager.set(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
             }
-            Log.d("CourseNotificationManager", "已设置每日" + hour + ":" + minute + "课程提醒");
-        } catch (Exception e) {
-            Log.e("CourseNotificationManager", "设置定时通知失败: " + e.getMessage(), e);
-        }
-    }
-    
-    /**
-     * 设置每日22点的定时通知（兼容旧版本）
-     */
-    public static void setDailyNotification(Context context) {
-        setDailyNotification(context, 22, 0);
-    }
-    
-    /**
-     * 取消定时通知
-     */
-    public static void cancelDailyNotification(Context context) {
-        AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-        Intent intent = new Intent(context, CourseNotificationManager.class);
-        intent.setAction(ACTION_SEND_NOTIFICATION);
-        
-        PendingIntent pendingIntent;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            // Android 12及以上需要指定FLAG_IMMUTABLE或FLAG_MUTABLE
-            pendingIntent = PendingIntent.getBroadcast(
-                    context, 
-                    0, 
-                    intent, 
-                    PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
-            );
         } else {
-            pendingIntent = PendingIntent.getBroadcast(
-                    context, 
-                    0, 
-                    intent, 
-                    PendingIntent.FLAG_UPDATE_CURRENT
-            );
-        }
-        
-        try {
-            alarmManager.cancel(pendingIntent);
-            pendingIntent.cancel();
-            Log.d("CourseNotificationManager", "已取消每日课程提醒");
-        } catch (Exception e) {
-            Log.e("CourseNotificationManager", "取消定时通知失败: " + e.getMessage(), e);
         }
     }
     
@@ -154,7 +95,6 @@ public class CourseNotificationManager extends BroadcastReceiver {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
             if (!notificationManager.areNotificationsEnabled()) {
-                Log.d("CourseNotificationManager", "通知权限未授予，无法发送通知");
                 return;
             }
         }
@@ -163,7 +103,6 @@ public class CourseNotificationManager extends BroadcastReceiver {
         List<Course> tomorrowCourses = getTomorrowCourses(context);
         
         if (tomorrowCourses.isEmpty()) {
-            Log.d("CourseNotificationManager", "明天没有课程，不发送通知");
             return;
         }
         
@@ -206,13 +145,8 @@ public class CourseNotificationManager extends BroadcastReceiver {
         NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         try {
             notificationManager.notify(NOTIFICATION_ID, builder.build());
-            Log.d("CourseNotificationManager", "已发送明日课程通知: " + content);
         } catch (Exception e) {
-            Log.e("CourseNotificationManager", "发送通知失败: " + e.getMessage(), e);
         }
-        
-        // 设置下一次通知
-        setDailyNotification(context);
     }
     
     /**
@@ -297,12 +231,7 @@ public class CourseNotificationManager extends BroadcastReceiver {
             // 获取用户设置的时间
             int hour = prefs.getInt("notification_hour", 22);
             int minute = prefs.getInt("notification_minute", 0);
-            setDailyNotification(context, hour, minute);
-            
-            Log.d("CourseNotificationManager", "已启用每日课程提醒，时间：" + hour + ":" + minute);
         } else {
-            cancelDailyNotification(context);
-            Log.d("CourseNotificationManager", "已禁用每日课程提醒");
         }
     }
 }

@@ -2,9 +2,7 @@ package cn.pylin.xykcb;
 
 import android.Manifest;
 import android.app.AlertDialog;
-import android.app.PictureInPictureParams;
 import android.appwidget.AppWidgetManager;
-import android.util.Rational;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -14,11 +12,9 @@ import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.Color;
-import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
@@ -44,7 +40,6 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.io.File;
 
 public class MainActivity extends AppCompatActivity {
     static String Week;
@@ -54,7 +49,6 @@ public class MainActivity extends AppCompatActivity {
     private CourseAdapter adapter;
     private LoginManager loginManager;
     private UpdateManager updateManager;
-    private boolean hasLoadedNetworkData = false; // 标记是否已加载网络数据
     private Switch switchDailyCourseReminder; // 添加为成员变量，解决作用域问题
     
 
@@ -130,13 +124,8 @@ public class MainActivity extends AppCompatActivity {
                         
                         // 获取并设置当前周次
                         int currentWeekNum = CourseDataManager.getCurrentWeek(MainActivity.this);
-                        android.util.Log.d("MainActivity", "通过日期判断当前周次为: " + currentWeekNum);
                         adapter.setCurrentWeek(currentWeekNum);
-                        
-                        // 标记已加载网络数据
-                        hasLoadedNetworkData = true;
                     } catch (Exception e) {
-                        android.util.Log.e("MainActivity", "加载课程表失败", e);
                         CustomToast.showShortToast(MainActivity.this, "加载课程表失败");
                     }
                 });
@@ -166,7 +155,6 @@ public class MainActivity extends AppCompatActivity {
 
     private void initNoteEditText() {
         EditText noteEditText = findViewById(R.id.toolbar_edit);
-        TextView appTitle = findViewById(R.id.toolbar_app_title);
         
         // 检查显示设置 - 修改默认值为false（默认不显示）
         SharedPreferences settingsPrefs = getSharedPreferences("AppSettings", Context.MODE_PRIVATE);
@@ -363,10 +351,6 @@ public class MainActivity extends AppCompatActivity {
                 .putString("schoolCode", schoolCode)
                 .putString("schoolName", schoolName)
                 .apply();
-
-        // 重置网络数据加载标志
-        hasLoadedNetworkData = false;
-        
         // 使用统一的登录管理器执行登录
         loginManager.performLogin(username, password, schoolCode);
         dialog.dismiss();
@@ -431,8 +415,18 @@ public class MainActivity extends AppCompatActivity {
             
             // 显示或隐藏时间选择器
             LinearLayout layoutNotificationTime = dialogView.findViewById(R.id.layout_notification_time);
+            TextView tvWidgetWarning = dialogView.findViewById(R.id.tv_widget_warning);
             if (layoutNotificationTime != null) {
                 layoutNotificationTime.setVisibility(isChecked ? View.VISIBLE : View.GONE);
+            }
+            if (tvWidgetWarning != null) {
+                // 设置开且小组件数目小于1则显示；大于1不显示；设置关不管1都不显示
+                int widgetCount = getWidgetCount();
+                if (isChecked && widgetCount < 1) {
+                    tvWidgetWarning.setVisibility(View.VISIBLE);
+                } else {
+                    tvWidgetWarning.setVisibility(View.GONE);
+                }
             }
             
             // 启用或禁用每日课程提醒
@@ -481,13 +475,7 @@ public class MainActivity extends AppCompatActivity {
                         // 更新显示的时间
                         String newTimeText = String.format("%02d:%02d", hourOfDay, minute);
                         tvNotificationTime.setText(newTimeText);
-                        
-                        // 重新设置通知时间
-                        if (cn.pylin.xykcb.CourseNotificationManager.isNotificationEnabled(MainActivity.this)) {
-                            cn.pylin.xykcb.CourseNotificationManager.cancelDailyNotification(MainActivity.this);
-                            cn.pylin.xykcb.CourseNotificationManager.setDailyNotification(MainActivity.this, hourOfDay, minute);
-                        }
-                        
+
                         CustomToast.showShortToast(MainActivity.this, "通知时间已设置为 " + newTimeText);
                     },
                     savedHour, savedMinute, true
@@ -495,8 +483,18 @@ public class MainActivity extends AppCompatActivity {
             timePickerDialog.show();
         });
         
-        // 根据开关状态显示或隐藏时间选择器
+        // 根据开关状态显示或隐藏时间选择器和警告文本
         layoutNotificationTime.setVisibility(dailyReminderEnabled ? View.VISIBLE : View.GONE);
+        TextView tvWidgetWarning = dialogView.findViewById(R.id.tv_widget_warning);
+        if (tvWidgetWarning != null) {
+            // 设置开且小组件数目小于1则显示；大于1不显示；设置关不管1都不显示
+            int widgetCount = getWidgetCount();
+            if (dailyReminderEnabled && widgetCount < 1) {
+                tvWidgetWarning.setVisibility(View.VISIBLE);
+            } else {
+                tvWidgetWarning.setVisibility(View.GONE);
+            }
+        }
 
         // 初始化用户信息
         SharedPreferences sharedPreferences = getSharedPreferences("LoginInfo", Context.MODE_PRIVATE);
@@ -550,6 +548,8 @@ public class MainActivity extends AppCompatActivity {
             tvVersionInfo.setText("版本号：获取失败");
         }
     
+
+
         builder.setView(dialogView);
         AlertDialog dialog = builder.create();
         dialog.show();
@@ -710,17 +710,10 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
-        
-        // 处理屏幕方向变化
-        if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE || 
-            newConfig.orientation == Configuration.ORIENTATION_PORTRAIT) {
-            android.util.Log.d("MainActivity", "屏幕方向变化: " + 
-                (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE ? "横屏" : "竖屏"));
-            handleOrientationChange();
-        }
-        
-        // 处理窗口模式变化（小窗/全屏切换）
-        handleWindowModeChange(newConfig);
+
+        // 只要界面发生变化就刷新UI
+        handleOrientationChange();
+
     }
     
     /**
@@ -739,27 +732,6 @@ public class MainActivity extends AppCompatActivity {
         SharedPreferences settingsPrefs = getSharedPreferences("AppSettings", Context.MODE_PRIVATE);
         boolean noteVisible = settingsPrefs.getBoolean("note_visible", false);
         updateNoteEditTextVisibility(noteVisible);
-    }
-    
-    /**
-     * 处理窗口模式变化（小窗/全屏切换）的UI重载逻辑
-     */
-    private void handleWindowModeChange(Configuration newConfig) {
-        // 检测是否是小窗模式或小屏幕
-        boolean isPictureInPictureMode = Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && 
-                                        isInPictureInPictureMode();
-        boolean isSmallScreen = (newConfig.screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK) == 
-                               Configuration.SCREENLAYOUT_SIZE_SMALL;
-        
-        // 根据窗口模式调整UI
-        if (isPictureInPictureMode || isSmallScreen) {
-            android.util.Log.d("MainActivity", "进入小窗/小屏模式");
-        } else {
-            android.util.Log.d("MainActivity", "进入全屏/正常模式");
-        }
-        
-        // 更新UI布局
-        updateUILayout();
     }
     
     /**
@@ -843,6 +815,21 @@ public class MainActivity extends AppCompatActivity {
                 CustomToast.showShortToast(this, "需要通知权限才能使用每日课程提醒功能");
             }
         }
+    }
+
+    /**
+     * 获取已添加的小组件数量
+     * @return 小组件数量
+     */
+    private int getWidgetCount() {
+        // 获取AppWidgetManager实例
+        AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this);
+        // 获取小组件的ComponentName
+        ComponentName thisAppWidget = new ComponentName(this.getPackageName(), CourseWidgetProvider.class.getName());
+        // 获取所有小组件ID
+        int[] appWidgetIds = appWidgetManager.getAppWidgetIds(thisAppWidget);
+        
+        return appWidgetIds.length;
     }
 
     private void refreshWidget() {

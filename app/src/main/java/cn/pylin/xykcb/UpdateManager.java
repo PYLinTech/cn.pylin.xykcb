@@ -248,13 +248,11 @@ public class UpdateManager {
                     for (File file : apkFiles) {
                         if (file.isFile() && file.getName().endsWith(".apk")) {
                             boolean deleted = file.delete();
-                            Log.d("UpdateManager", "清理APK文件: " + file.getName() + ", 结果: " + deleted);
                         }
                     }
                 }
             }
         } catch (Exception e) {
-            Log.e("UpdateManager", "清理APK文件失败", e);
         }
     }
     

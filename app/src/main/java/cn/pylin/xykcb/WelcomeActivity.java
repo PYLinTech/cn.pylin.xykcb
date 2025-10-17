@@ -4,12 +4,14 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -161,11 +163,11 @@ public class WelcomeActivity extends AppCompatActivity {
     }
     
     private void showPrivacyPolicyDialog() {
-        // 使用自定义布局创建AlertDialog
+        // 使用自定义布局创建AlertDialog，使用与菜单相同的主题
         LayoutInflater inflater = LayoutInflater.from(this);
         View dialogView = inflater.inflate(R.layout.dialog_privacy_policy, null);
         
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.DialogTheme);
         builder.setView(dialogView);
         
         AlertDialog dialog = builder.create();
@@ -173,9 +175,53 @@ public class WelcomeActivity extends AppCompatActivity {
         // 获取按钮并设置点击事件
         Button btnAgree = dialogView.findViewById(R.id.btn_agree);
         Button btnDisagree = dialogView.findViewById(R.id.btn_disagree);
+        TextView tvUserAgreement = dialogView.findViewById(R.id.tv_user_agreement);
+        TextView tvPrivacyPolicy = dialogView.findViewById(R.id.tv_privacy_policy);
+        
+        // 设置TextView为可点击
+        tvUserAgreement.setClickable(true);
+        tvUserAgreement.setFocusable(true);
+        tvPrivacyPolicy.setClickable(true);
+        tvPrivacyPolicy.setFocusable(true);
         
         // 检查是否从设置页面进入
         boolean fromSettings = getIntent().getBooleanExtra("from_settings", false);
+        
+        // 联网加载用户协议内容
+        PrivacyPolicyManager.loadUserAgreementContent(new PrivacyPolicyManager.PrivacyPolicyCallback() {
+            @Override
+            public void onPolicyLoaded(String content) {
+                // 在主线程中更新UI
+                runOnUiThread(() -> {
+                    tvUserAgreement.setText(content);
+                    // 如果内容是加载失败的提示，设置点击事件
+                    if (content.contains("点击查看用户协议")) {
+                        tvUserAgreement.setOnClickListener(v -> {
+                            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.pylin.cn/xykcb"));
+                            startActivity(intent);
+                        });
+                    }
+                });
+            }
+        });
+        
+        // 联网加载隐私政策内容
+        PrivacyPolicyManager.loadPrivacyPolicyContent(new PrivacyPolicyManager.PrivacyPolicyCallback() {
+            @Override
+            public void onPolicyLoaded(String content) {
+                // 在主线程中更新UI
+                runOnUiThread(() -> {
+                    tvPrivacyPolicy.setText(content);
+                    // 如果内容是加载失败的提示，设置点击事件
+                    if (content.contains("点击查看隐私政策")) {
+                        tvPrivacyPolicy.setOnClickListener(v -> {
+                            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.pylin.cn/xykcb"));
+                            startActivity(intent);
+                        });
+                    }
+                });
+            }
+        });
         
         btnAgree.setOnClickListener(v -> {
             if (!fromSettings) {
