@@ -408,7 +408,7 @@ public class MainActivity extends AppCompatActivity {
             updateNoteEditTextVisibility(isChecked);
         });
         
-        // 设置每日课程提醒开关监听器
+        // 设置明日课程提醒开关监听器
         switchDailyCourseReminder.setOnCheckedChangeListener((buttonView, isChecked) -> {
             // 保存设置
             settingsPrefs.edit().putBoolean("daily_course_reminder", isChecked).apply();
@@ -429,7 +429,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
             
-            // 启用或禁用每日课程提醒
+            // 启用或禁用明日课程提醒
             if (isChecked) {
                 handleNotificationSwitchOn();
             } else {
@@ -771,7 +771,7 @@ public class MainActivity extends AppCompatActivity {
         
         // 权限已授予，启用通知
         cn.pylin.xykcb.CourseNotificationManager.setNotificationEnabled(this, true);
-        CustomToast.showShortToast(this, "已开启每日课程提醒");
+        CustomToast.showShortToast(this, "已开启明日课程提醒");
     }
     
     /**
@@ -790,7 +790,7 @@ public class MainActivity extends AppCompatActivity {
         }
         
         // 正常关闭，显示关闭提示
-        CustomToast.showShortToast(this, "已关闭每日课程提醒");
+        CustomToast.showShortToast(this, "已关闭明日课程提醒");
     }
 
     @Override
@@ -801,7 +801,7 @@ public class MainActivity extends AppCompatActivity {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 // 通知权限已授予，启用通知
                 cn.pylin.xykcb.CourseNotificationManager.setNotificationEnabled(this, true);
-                CustomToast.showShortToast(this, "已开启每日课程提醒");
+                CustomToast.showShortToast(this, "已开启明日课程提醒");
             } else {
                 // 通知权限被拒绝，关闭开关并提示用户
                 SharedPreferences settingsPrefs = getSharedPreferences("AppSettings", Context.MODE_PRIVATE);
@@ -812,7 +812,7 @@ public class MainActivity extends AppCompatActivity {
                     switchDailyCourseReminder.setChecked(false);
                 }
                 
-                CustomToast.showShortToast(this, "需要通知权限才能使用每日课程提醒功能");
+                CustomToast.showShortToast(this, "需要通知权限才能使用明日课程提醒功能");
             }
         }
     }
