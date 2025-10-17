@@ -77,7 +77,11 @@ public class PrivacyPolicyManager {
         
         confirmBuilder.setView(confirmView);
         AlertDialog confirmDialog = confirmBuilder.create();
-        confirmDialog.setCancelable(false);
+
+        // 设置弹窗关闭监听器，在弹窗关闭时还原开关状态
+        confirmDialog.setOnCancelListener(dialog -> {
+            restoreSwitchState(onCancelCallback);
+        });
         
         // 设置确认按钮点击事件
         btnConfirm.setOnClickListener(v -> {
@@ -93,14 +97,21 @@ public class PrivacyPolicyManager {
         
         // 设置取消按钮点击事件
         btnCancel.setOnClickListener(v -> {
-            // 用户取消撤销，调用回调函数
-            if (onCancelCallback != null) {
-                onCancelCallback.run();
-            }
+            restoreSwitchState(onCancelCallback);
             confirmDialog.dismiss();
         });
         
         confirmDialog.show();
+    }
+    
+    /**
+     * 还原开关状态
+     * @param onCancelCallback 取消回调函数
+     */
+    private static void restoreSwitchState(Runnable onCancelCallback) {
+        if (onCancelCallback != null) {
+            onCancelCallback.run();
+        }
     }
     
     /**
@@ -183,7 +194,7 @@ public class PrivacyPolicyManager {
         GradientDrawable confirmBackground = new GradientDrawable();
         confirmBackground.setShape(GradientDrawable.RECTANGLE);
         confirmBackground.setColor(Color.parseColor("#FF5252")); // 红色背景
-        confirmBackground.setCornerRadius(10);
+        confirmBackground.setCornerRadius(15);
         btnConfirm.setBackground(confirmBackground);
         btnConfirm.setTextColor(Color.WHITE); // 白色文字
         
@@ -200,7 +211,7 @@ public class PrivacyPolicyManager {
         GradientDrawable cancelBackground = new GradientDrawable();
         cancelBackground.setShape(GradientDrawable.RECTANGLE);
         cancelBackground.setColor(Color.parseColor("#757575")); // 灰色背景
-        cancelBackground.setCornerRadius(10);
+        cancelBackground.setCornerRadius(15);
         btnCancel.setBackground(cancelBackground);
         btnCancel.setTextColor(Color.WHITE); // 白色文字
         
@@ -210,8 +221,7 @@ public class PrivacyPolicyManager {
         
         confirmBuilder.setView(confirmView);
         AlertDialog confirmDialog = confirmBuilder.create();
-        confirmDialog.setCancelable(false);
-        
+
         // 设置确认按钮点击事件
         btnConfirm.setOnClickListener(v -> {
             // 用户确认不同意，清除所有APP数据并退出应用

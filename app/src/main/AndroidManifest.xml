@@ -33,7 +33,8 @@
         <!-- 修改MainActivity，移除LAUNCHER intent-filter -->
         <activity
             android:name=".MainActivity"
-            android:exported="true">
+            android:exported="true"
+            android:configChanges="orientation|screenSize|keyboardHidden|screenLayout|smallestScreenSize">
         </activity>
         <provider
             android:name="androidx.core.content.FileProvider"

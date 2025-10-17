@@ -167,7 +167,6 @@ public class WelcomeActivity extends AppCompatActivity {
         
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setView(dialogView);
-        builder.setCancelable(false); // 禁止点击外部关闭弹窗
         
         AlertDialog dialog = builder.create();
         

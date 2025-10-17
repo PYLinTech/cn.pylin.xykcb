@@ -472,6 +472,7 @@ public class CourseAdapter extends RecyclerView.Adapter<CourseAdapter.CourseView
             final AlertDialog dialog = builder.setView(dialogView).create();
         
             GridView weekGrid = dialogView.findViewById(R.id.weekGrid);
+            Button btnReturnCurrentWeek = dialogView.findViewById(R.id.btnReturnCurrentWeek);
             Button btnAllWeeks = dialogView.findViewById(R.id.btnAllWeeks);
         
             final List<Integer> weeks = new ArrayList<>();
@@ -513,6 +514,13 @@ public class CourseAdapter extends RecyclerView.Adapter<CourseAdapter.CourseView
             };
         
             weekGrid.setAdapter(adapter);
+        
+            btnReturnCurrentWeek.setOnClickListener(v -> {
+                // 获取当前周次并设置
+                int currentWeekNum = CourseDataManager.getCurrentWeek(context);
+                setCurrentWeek(currentWeekNum);
+                dialog.dismiss();
+            });
         
             btnAllWeeks.setOnClickListener(v -> {
                 // 使用新的setShowAllWeeks方法
