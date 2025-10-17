@@ -213,7 +213,6 @@ public class UpdateManager {
 
         tvUpdateDescription.setText(updateDescription);
         final AlertDialog dialog = builder.setView(view).create();
-        dialog.setCancelable(false);
         dialog.show();
 
         btnUpdateNow.setOnClickListener(v -> {

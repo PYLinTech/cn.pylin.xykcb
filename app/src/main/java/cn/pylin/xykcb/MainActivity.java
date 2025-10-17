@@ -2,7 +2,9 @@ package cn.pylin.xykcb;
 
 import android.Manifest;
 import android.app.AlertDialog;
+import android.app.PictureInPictureParams;
 import android.appwidget.AppWidgetManager;
+import android.util.Rational;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -402,7 +404,7 @@ public class MainActivity extends AppCompatActivity {
         
         // 获取设置页面的切换按钮（替换原来的TextView）
         Switch switchNoteVisibilityToggle = dialogView.findViewById(R.id.switch_note_visibility_toggle);
-        Switch switchDailyCourseReminder = dialogView.findViewById(R.id.switch_daily_course_reminder);
+        switchDailyCourseReminder = dialogView.findViewById(R.id.switch_daily_course_reminder);
         
         // 初始化切换按钮状态
         SharedPreferences settingsPrefs = getSharedPreferences("AppSettings", Context.MODE_PRIVATE);
@@ -427,32 +429,17 @@ public class MainActivity extends AppCompatActivity {
             // 保存设置
             settingsPrefs.edit().putBoolean("daily_course_reminder", isChecked).apply();
             
-            // 启用或禁用每日课程提醒
-            if (isChecked) {
-                // 检查通知权限（Android 13+）
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    if (ContextCompat.checkSelfPermission(MainActivity.this, 
-                            Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                        // 请求通知权限
-                        ActivityCompat.requestPermissions(MainActivity.this, 
-                                new String[]{Manifest.permission.POST_NOTIFICATIONS}, 
-                                1001);
-                        // 暂时保存用户的选择，但先不设置通知，等权限请求结果后再处理
-                        return;
-                    }
-                }
-                
-                cn.pylin.xykcb.CourseNotificationManager.setNotificationEnabled(MainActivity.this, true);
-                CustomToast.showShortToast(MainActivity.this, "已开启每日课程提醒");
-            } else {
-                cn.pylin.xykcb.CourseNotificationManager.setNotificationEnabled(MainActivity.this, false);
-                CustomToast.showShortToast(MainActivity.this, "已关闭每日课程提醒");
-            }
-            
             // 显示或隐藏时间选择器
             LinearLayout layoutNotificationTime = dialogView.findViewById(R.id.layout_notification_time);
             if (layoutNotificationTime != null) {
                 layoutNotificationTime.setVisibility(isChecked ? View.VISIBLE : View.GONE);
+            }
+            
+            // 启用或禁用每日课程提醒
+            if (isChecked) {
+                handleNotificationSwitchOn();
+            } else {
+                handleNotificationSwitchOff();
             }
         });
         
@@ -721,6 +708,120 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        
+        // 处理屏幕方向变化
+        if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE || 
+            newConfig.orientation == Configuration.ORIENTATION_PORTRAIT) {
+            android.util.Log.d("MainActivity", "屏幕方向变化: " + 
+                (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE ? "横屏" : "竖屏"));
+            handleOrientationChange();
+        }
+        
+        // 处理窗口模式变化（小窗/全屏切换）
+        handleWindowModeChange(newConfig);
+    }
+    
+    /**
+     * 处理屏幕方向变化的UI重载逻辑
+     */
+    private void handleOrientationChange() {
+        // 重新设置RecyclerView的LayoutManager以适应新的屏幕尺寸
+        if (recyclerView != null) {
+            recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        }
+        
+        // 更新UI布局
+        updateUILayout();
+        
+        // 更新备注栏的显示状态
+        SharedPreferences settingsPrefs = getSharedPreferences("AppSettings", Context.MODE_PRIVATE);
+        boolean noteVisible = settingsPrefs.getBoolean("note_visible", false);
+        updateNoteEditTextVisibility(noteVisible);
+    }
+    
+    /**
+     * 处理窗口模式变化（小窗/全屏切换）的UI重载逻辑
+     */
+    private void handleWindowModeChange(Configuration newConfig) {
+        // 检测是否是小窗模式或小屏幕
+        boolean isPictureInPictureMode = Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && 
+                                        isInPictureInPictureMode();
+        boolean isSmallScreen = (newConfig.screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK) == 
+                               Configuration.SCREENLAYOUT_SIZE_SMALL;
+        
+        // 根据窗口模式调整UI
+        if (isPictureInPictureMode || isSmallScreen) {
+            android.util.Log.d("MainActivity", "进入小窗/小屏模式");
+        } else {
+            android.util.Log.d("MainActivity", "进入全屏/正常模式");
+        }
+        
+        // 更新UI布局
+        updateUILayout();
+    }
+    
+    /**
+     * 统一更新UI布局
+     */
+    private void updateUILayout() {
+        // 重新计算RecyclerView高度
+        if (adapter != null && recyclerView != null) {
+            recyclerView.post(() -> {
+                int recyclerViewHeight = recyclerView.getHeight() - recyclerView.getPaddingTop() - recyclerView.getPaddingBottom();
+                adapter.setRecyclerViewHeight(recyclerViewHeight);
+                
+                // 通知适配器数据变化，触发UI重绘
+                if (adapter.getItemCount() > 0) {
+                    adapter.notifyDataSetChanged();
+                }
+            });
+        }
+    }
+
+    /**
+     * 处理开关开启逻辑
+     */
+    private void handleNotificationSwitchOn() {
+        // 检查通知权限（Android 13+）
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, 
+                    Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                // 请求通知权限
+                ActivityCompat.requestPermissions(this, 
+                        new String[]{Manifest.permission.POST_NOTIFICATIONS}, 
+                        1001);
+                // 先显示开关和时间设置，等权限请求结果后再处理通知设置
+                return;
+            }
+        }
+        
+        // 权限已授予，启用通知
+        cn.pylin.xykcb.CourseNotificationManager.setNotificationEnabled(this, true);
+        CustomToast.showShortToast(this, "已开启每日课程提醒");
+    }
+    
+    /**
+     * 处理开关关闭逻辑
+     */
+    private void handleNotificationSwitchOff() {
+        cn.pylin.xykcb.CourseNotificationManager.setNotificationEnabled(this, false);
+        
+        // 检查是否是因为权限被拒绝导致的关闭
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, 
+                    Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                // 权限被拒绝导致的关闭，不显示"已关闭"提示
+                return;
+            }
+        }
+        
+        // 正常关闭，显示关闭提示
+        CustomToast.showShortToast(this, "已关闭每日课程提醒");
+    }
+
+    @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         
@@ -734,7 +835,7 @@ public class MainActivity extends AppCompatActivity {
                 SharedPreferences settingsPrefs = getSharedPreferences("AppSettings", Context.MODE_PRIVATE);
                 settingsPrefs.edit().putBoolean("daily_course_reminder", false).apply();
                 
-                // 如果对话框还在显示，更新开关状态
+                // 如果对话框还在显示，更新开关状态和时间设置区域
                 if (switchDailyCourseReminder != null) {
                     switchDailyCourseReminder.setChecked(false);
                 }
