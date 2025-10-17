@@ -20,9 +20,15 @@ public class CourseWidgetProvider extends AppWidgetProvider {
     private static final String ACTION_TIME_CHANGED = "android.intent.action.TIME_SET";
     private static final String ACTION_TIMEZONE_CHANGED = "android.intent.action.TIMEZONE_CHANGED";
     private static final String ACTION_BOOT_COMPLETED = "android.intent.action.BOOT_COMPLETED";
+    private static final long DOUBLE_CLICK_INTERVAL = 1200; // 1200毫秒内的双击检测
+    
     private static int todayDay = getTodayDayOfWeek();
     static int currentDay = getTodayDayOfWeek();
     static int currentWeekOffset = 0; // 0表示当前周，-1表示上周，+1表示下周
+    
+    // 双击检测相关变量
+    private static long lastClickTime = 0;
+    private static int clickCount = 0;
 
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
@@ -149,6 +155,38 @@ public class CourseWidgetProvider extends AppWidgetProvider {
     }
 
     private void handleRefreshAction(Context context) {
+        // 检查是否已经切换到今天
+        boolean isToday = (currentDay == todayDay && currentWeekOffset == 0);
+        
+        // 如果已经切换到今天，检查双击
+        if (isToday) {
+            long currentTime = System.currentTimeMillis();
+            // 检查是否在1200毫秒内
+            if (currentTime - lastClickTime < DOUBLE_CLICK_INTERVAL) {
+                clickCount++;
+                // 如果是第二次点击，启动主页面
+                if (clickCount >= 2) {
+                    // 重置计数器
+                    clickCount = 0;
+                    lastClickTime = 0;
+                    
+                    // 启动主页面
+                    Intent launchIntent = new Intent(context, WelcomeActivity.class);
+                    launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    context.startActivity(launchIntent);
+                    return; // 不执行刷新操作
+                }
+            } else {
+                // 超过1200毫秒，重置计数器
+                clickCount = 1;
+            }
+            lastClickTime = currentTime;
+        } else {
+            // 未切换到今天，重置计数器
+            clickCount = 0;
+            lastClickTime = 0;
+        }
+        
         // 重置到系统当前日期
         todayDay = getTodayDayOfWeek();
         currentDay = todayDay;

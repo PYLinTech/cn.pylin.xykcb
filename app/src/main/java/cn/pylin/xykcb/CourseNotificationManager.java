@@ -1,6 +1,5 @@
 package cn.pylin.xykcb;
 
-import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -8,7 +7,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
-import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
 
@@ -32,7 +30,7 @@ public class CourseNotificationManager {
                     CHANNEL_NAME,
                     android.app.NotificationManager.IMPORTANCE_DEFAULT
             );
-            channel.setDescription("每日课程提醒通知");
+            channel.setDescription("明日课程提醒通知");
             
             android.app.NotificationManager notificationManager = 
                     context.getSystemService(android.app.NotificationManager.class);
@@ -88,7 +86,7 @@ public class CourseNotificationManager {
     }
     
     /**
-     * 发送每日通知
+     * 发送明日通知
      */
     private static void sendDailyNotification(Context context) {
         // 检查通知权限（Android 13+）
