@@ -180,7 +180,6 @@ public class WelcomeActivity extends AppCompatActivity {
         
         btnAgree.setOnClickListener(v -> {
             if (!fromSettings) {
-                // 用户同意，保存初始值到本地存储并进入主界面
                 setFirstLaunchCompleted();
             }
             dialog.dismiss();
@@ -188,12 +187,7 @@ public class WelcomeActivity extends AppCompatActivity {
         });
         
         btnDisagree.setOnClickListener(v -> {
-            // 用户不同意，保存0到本地存储并退出应用
-            SharedPreferences prefs = getSharedPreferences("AppSettings", Context.MODE_PRIVATE);
-            prefs.edit().putInt("introVersion", 0).commit(); // 使用commit()同步提交而非apply()异步提交
-            dialog.dismiss();
-            finishAffinity(); // 关闭所有Activity
-            System.exit(0);   // 退出应用进程
+            PrivacyPolicyManager.showDisagreeDialog(WelcomeActivity.this);
         });
         
         dialog.show();
