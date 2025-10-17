@@ -12,9 +12,11 @@ import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.Color;
+import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
@@ -35,11 +37,12 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import cn.pylin.xykcb.CustomToast;
+
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.io.File;
 
 public class MainActivity extends AppCompatActivity {
     static String Week;
@@ -51,6 +54,24 @@ public class MainActivity extends AppCompatActivity {
     private UpdateManager updateManager;
     private boolean hasLoadedNetworkData = false; // 标记是否已加载网络数据
     private Switch switchDailyCourseReminder; // 添加为成员变量，解决作用域问题
+    
+    /**
+     * 递归删除目录及其所有内容
+     * @param directory 要删除的目录
+     */
+    private void deleteDirectory(File directory) {
+        if (directory != null && directory.exists()) {
+            if (directory.isDirectory()) {
+                File[] files = directory.listFiles();
+                if (files != null) {
+                    for (File file : files) {
+                        deleteDirectory(file);
+                    }
+                }
+            }
+            directory.delete();
+        }
+    }
 
     @Override
     public Resources getResources() {
@@ -282,8 +303,6 @@ public class MainActivity extends AppCompatActivity {
         });
 
         btnLogin.setOnClickListener(v -> handleLoginAction(etUsername, etPassword, selectedSchool[0], selectedSchoolName[0], dialog));
-        dialog.setCanceledOnTouchOutside(false);
-        dialog.setCancelable(false);
         dialog.show();
     }
 
@@ -450,6 +469,111 @@ public class MainActivity extends AppCompatActivity {
             LinearLayout layoutNotificationTime = dialogView.findViewById(R.id.layout_notification_time);
             if (layoutNotificationTime != null) {
                 layoutNotificationTime.setVisibility(isChecked ? View.VISIBLE : View.GONE);
+            }
+        });
+        
+        // 获取撤销同意用户协议及隐私政策开关
+        Switch switchPrivacyPolicyConsent = dialogView.findViewById(R.id.switch_privacy_policy_consent);
+        
+        // 设置撤销同意用户协议及隐私政策开关监听器
+        switchPrivacyPolicyConsent.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (!isChecked) {
+                // 用户撤销同意，显示自定义确认对话框
+                AlertDialog.Builder confirmBuilder = new AlertDialog.Builder(MainActivity.this, R.style.DialogTheme);
+                View confirmView = LayoutInflater.from(MainActivity.this).inflate(R.layout.dialog_main, null);
+                
+                // 设置标题和内容
+                TextView tvTitle = confirmView.findViewById(R.id.tvCourseName);
+                tvTitle.setText("确认撤销？");
+                
+                // 获取内容容器并添加消息
+                LinearLayout contentContainer = confirmView.findViewById(R.id.courseContainer);
+                TextView tvMessage = new TextView(MainActivity.this);
+                tvMessage.setText("撤销同意将清除本应用的所有数据并退出，是否继续？");
+                tvMessage.setTextSize(16);
+                tvMessage.setTextColor(getResources().getColor(R.color.info_text_color));
+                tvMessage.setPadding(0, 0, 0, 20);
+                contentContainer.addView(tvMessage);
+                
+                // 设置按钮
+                Button btnConfirm = confirmView.findViewById(R.id.btn_close);
+                btnConfirm.setText("确认撤销");
+                // 以代码形式设置确认按钮的背景颜色为红色
+                GradientDrawable confirmBackground = new GradientDrawable();
+                confirmBackground.setShape(GradientDrawable.RECTANGLE);
+                confirmBackground.setColor(Color.parseColor("#FF5252")); // 红色背景
+                confirmBackground.setCornerRadius(8);
+                btnConfirm.setBackground(confirmBackground);
+                btnConfirm.setTextColor(Color.WHITE); // 白色文字
+                
+                // 添加取消按钮
+                Button btnCancel = new Button(MainActivity.this);
+                LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT);
+                params.setMargins(0, 10, 0, 0);
+                btnCancel.setLayoutParams(params);
+                btnCancel.setText("取消");
+                btnCancel.setTextSize(18);
+                // 以代码形式设置取消按钮的背景颜色为灰色
+                GradientDrawable cancelBackground = new GradientDrawable();
+                cancelBackground.setShape(GradientDrawable.RECTANGLE);
+                cancelBackground.setColor(Color.parseColor("#757575")); // 灰色背景
+                cancelBackground.setCornerRadius(8);
+                btnCancel.setBackground(cancelBackground);
+                btnCancel.setTextColor(Color.WHITE); // 白色文字
+                
+                // 将取消按钮添加到对话框底部
+                LinearLayout rootLayout = (LinearLayout) confirmView;
+                rootLayout.addView(btnCancel);
+                
+                confirmBuilder.setView(confirmView);
+                AlertDialog confirmDialog = confirmBuilder.create();
+                confirmDialog.setCancelable(false);
+                
+                // 设置确认按钮点击事件
+                btnConfirm.setOnClickListener(v -> {
+                    // 用户确认撤销，清除所有APP数据并退出应用
+                    CustomToast.showShortToast(MainActivity.this, "正在清除数据...");
+                    
+                    // 关闭对话框
+                    confirmDialog.dismiss();
+                    
+                    // 在新线程中执行数据清除操作，确保阻塞完成
+                    new Thread(() -> {
+                        File dataDir = getFilesDir();
+                        File sharedPrefsDir = new File(getApplicationInfo().dataDir + "/shared_prefs");
+                        File cacheDir = getCacheDir();
+                        File externalCacheDir = getExternalCacheDir();
+                        
+                        // 删除私有目录下的所有文件
+                        deleteDirectory(dataDir);
+                        deleteDirectory(sharedPrefsDir);
+                        deleteDirectory(cacheDir);
+                        if (externalCacheDir != null) {
+                            deleteDirectory(externalCacheDir);
+                        }
+                        
+                        // 在主线程中显示完成提示并退出
+                        runOnUiThread(() -> {
+                            CustomToast.showShortToast(MainActivity.this, "数据清除完成，即将退出...");
+                            // 延迟一秒退出应用，让用户看到提示
+                            new Handler().postDelayed(() -> {
+                                finishAffinity(); // 关闭所有Activity
+                                System.exit(0);   // 退出应用进程
+                            }, 1000);
+                        });
+                    }).start();
+                });
+                
+                // 设置取消按钮点击事件
+                btnCancel.setOnClickListener(v -> {
+                    // 用户取消撤销，恢复开关状态
+                    switchPrivacyPolicyConsent.setChecked(true);
+                    confirmDialog.dismiss();
+                });
+                
+                confirmDialog.show();
             }
         });
         
