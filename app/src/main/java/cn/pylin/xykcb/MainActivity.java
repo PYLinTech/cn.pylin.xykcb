@@ -374,6 +374,7 @@ public class MainActivity extends AppCompatActivity {
         TextView tvDescription = dialogView.findViewById(R.id.tvDescription);
         TextView tvVersionInfo = dialogView.findViewById(R.id.tvVersionInfo);
         TextView tvICPInfo = dialogView.findViewById(R.id.tvICPInfo);
+        TextView tvOpenSource = dialogView.findViewById(R.id.tvOpenSource);
         Button btnReLogin = dialogView.findViewById(R.id.btn_reLogin);
         Button btnPYLinTech = dialogView.findViewById(R.id.btn_PYLinTech);
         Button btnCheckUpdate = dialogView.findViewById(R.id.btn_check_update);
@@ -659,6 +660,13 @@ public class MainActivity extends AppCompatActivity {
             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://beian.miit.gov.cn/"));
             startActivity(intent);
         });
+        
+        // 添加开源地址点击事件
+        tvOpenSource.setOnClickListener(v -> {
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/PYLinTech/cn.pylin.xykcb"));
+            startActivity(intent);
+        });
+        
         btnShowWelcome.setOnClickListener(v -> {
         // 启动引导页面
         Intent intent = new Intent(MainActivity.this, WelcomeActivity.class);

@@ -318,8 +318,10 @@
                             android:text="备案号：渝ICP备2025049527号-2A"
                             android:textColor="@color/info_text_color"
                             android:textSize="16sp"
-                            android:padding="12dp" />
-                            
+                            android:padding="12dp"
+                            android:clickable="true"
+                            android:focusable="true" />
+
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -380,7 +382,16 @@
                             android:padding="12dp"
                             android:clickable="true"
                             android:focusable="true"/>
-
+                        <TextView
+                            android:id="@+id/tvOpenSource"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="查看开源地址"
+                            android:textColor="@color/info_text_color"
+                            android:textSize="16sp"
+                            android:padding="12dp"
+                            android:clickable="true"
+                            android:focusable="true" />
                         <TextView
                             android:id="@+id/btn_join_qq_group"
                             android:layout_width="match_parent"
