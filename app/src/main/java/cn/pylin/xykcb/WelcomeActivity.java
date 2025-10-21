@@ -50,6 +50,22 @@ public class WelcomeActivity extends AppCompatActivity {
         setupClickListeners();
         
     }
+
+    private long backPressedTime = 0;
+    
+    @Override
+    public void onBackPressed() {
+        // 实现按两次退出功能
+        if (backPressedTime + 2000 > System.currentTimeMillis()) {
+            // 第二次按返回键，退出应用
+            super.onBackPressed();
+            return;
+        } else {
+            // 第一次按返回键，显示提示
+            CustomToast.showShortToast(this, "再按一次返回将退出");
+        }
+        backPressedTime = System.currentTimeMillis();
+    }
     
     private boolean isFirstLaunch() {
         SharedPreferences prefs = getSharedPreferences("AppSettings", Context.MODE_PRIVATE);

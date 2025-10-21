@@ -2,6 +2,7 @@ package cn.pylin.xykcb;
 
 import android.Manifest;
 import android.app.AlertDialog;
+import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
 import android.content.Context;
@@ -695,6 +696,12 @@ public class MainActivity extends AppCompatActivity {
             }
             dialog.dismiss();
         });
+
+        // 创建桌面小组件按钮点击事件
+        View layoutCreateWidget = layoutSettings.findViewById(R.id.layout_create_widget);
+        layoutCreateWidget.setOnClickListener(v -> {
+            createDesktopWidget();
+        });
     }
 
     // 添加更新备注栏显示状态的方法
@@ -838,6 +845,35 @@ public class MainActivity extends AppCompatActivity {
         int[] appWidgetIds = appWidgetManager.getAppWidgetIds(thisAppWidget);
         
         return appWidgetIds.length;
+    }
+
+    /**
+     * 创建桌面小组件
+     */
+    private void createDesktopWidget() {
+        // 检查Android版本是否支持requestPinAppWidget方法（Android 8.0+）
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this);
+            ComponentName appWidget = new ComponentName(this, CourseWidgetProvider.class);
+            
+            // 检查小组件是否可用
+            if (appWidgetManager.isRequestPinAppWidgetSupported()) {
+                // 创建PinAppWidget请求
+                Intent pinnedWidgetCallbackIntent = new Intent(this, MainActivity.class);
+                PendingIntent successCallback = PendingIntent.getActivity(
+                    this, 0, pinnedWidgetCallbackIntent, 
+                    PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+                );
+                
+                // 请求固定小组件
+                appWidgetManager.requestPinAppWidget(appWidget, null, successCallback);
+                CustomToast.showShortToast(this, "添加失败，请长按桌面进行添加");
+            } else {
+                CustomToast.showShortToast(this, "添加失败，请长按桌面进行添加");
+            }
+        } else {
+            CustomToast.showShortToast(this, "添加失败，请长按桌面进行添加");
+        }
     }
 
     private void refreshWidget() {

@@ -20,7 +20,7 @@ public class CourseWidgetProvider extends AppWidgetProvider {
     private static final String ACTION_TIME_CHANGED = "android.intent.action.TIME_SET";
     private static final String ACTION_TIMEZONE_CHANGED = "android.intent.action.TIMEZONE_CHANGED";
     private static final String ACTION_BOOT_COMPLETED = "android.intent.action.BOOT_COMPLETED";
-    private static final long DOUBLE_CLICK_INTERVAL = 1200; // 1200毫秒内的双击检测
+    private static final long DOUBLE_CLICK_INTERVAL = 500; // 500毫秒内的双击检测
     
     private static int todayDay = getTodayDayOfWeek();
     static int currentDay = getTodayDayOfWeek();
@@ -101,7 +101,7 @@ public class CourseWidgetProvider extends AppWidgetProvider {
                     context, 0, nextDayIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
             views.setOnClickPendingIntent(R.id.widget_nextday, nextDayPendingIntent);
         } catch (Exception e) {
-            e.printStackTrace();
+            //
         }
 
         appWidgetManager.updateAppWidget(appWidgetId, views);

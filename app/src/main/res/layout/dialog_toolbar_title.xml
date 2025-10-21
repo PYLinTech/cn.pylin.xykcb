@@ -212,7 +212,8 @@
                         <!-- 明日课程提醒开关 -->
                         <LinearLayout
                             android:layout_width="match_parent"
-                            android:layout_height="wrap_content">
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal">
 
                             <TextView
                                 android:layout_width="wrap_content"
@@ -237,6 +238,7 @@
                             android:id="@+id/layout_notification_time"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
+                            android:orientation="horizontal"
                             android:visibility="gone"
                             android:clickable="true"
                             android:focusable="true">
@@ -276,6 +278,41 @@
                             android:clickable="false"
                             android:focusable="false"
                             android:visibility="gone" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="桌面小组件："
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/info_title_color"
+                        android:layout_marginBottom="10dp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="10dp"
+                        android:orientation="vertical"
+                        android:background="@drawable/edit_text_background">
+
+                        <!-- 创建桌面小组件按钮 -->
+                        <LinearLayout
+                            android:id="@+id/layout_create_widget"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:clickable="true"
+                            android:focusable="true">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="创建桌面小组件"
+                                android:textSize="16sp"
+                                android:textColor="@color/info_text_color"
+                                android:padding="12dp" />
+                        </LinearLayout>
                     </LinearLayout>
 
                 </LinearLayout>

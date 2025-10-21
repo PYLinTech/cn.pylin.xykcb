@@ -67,8 +67,8 @@ public class CourseNotificationManager {
         int targetTotalMinutes = hour * 60 + minute;
         int timeDiffMinutes = Math.abs(currentTotalMinutes - targetTotalMinutes);
         
-        // 检查是否接近设定时间（半小时内）
-        if (timeDiffMinutes <= 30) {
+        // 检查是否接近设定时间（十五分钟内）
+        if (timeDiffMinutes <= 15) {
             // 检查上一次通知时间
             long lastNotificationTime = prefs.getLong(PREF_LAST_NOTIFICATION_TIME, 0);
             long currentTime = System.currentTimeMillis();
