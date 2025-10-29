@@ -33,6 +33,9 @@ import android.widget.LinearLayout;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.util.TypedValue;
+import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.view.Gravity;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -109,18 +112,17 @@ public class MainActivity extends AppCompatActivity {
                         List<List<Course>> mergedCourses = CourseDataManager.getMergedCourses(MainActivity.this, weeklyCourses);
 
                         if (adapter == null) {
-                            // 首次创建adapter
-                            adapter = new CourseAdapter(MainActivity.this, mergedCourses, weekHeaders);
-                            recyclerView.setAdapter(adapter);
-                            
+                            // 先获取RecyclerView的高度，再创建adapter
                             recyclerView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
                                 @Override
                                 public void onGlobalLayout() {
                                     recyclerView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
                                     int recyclerViewHeight = recyclerView.getHeight() - recyclerView.getPaddingTop() - recyclerView.getPaddingBottom();
-                                    if (adapter != null) {
-                                        adapter.setRecyclerViewHeight(recyclerViewHeight);
-                                    }
+                                    
+                                    // 在获取到正确高度后创建adapter
+                                    adapter = new CourseAdapter(MainActivity.this, mergedCourses, weekHeaders);
+                                    adapter.setRecyclerViewHeight(recyclerViewHeight);
+                                    recyclerView.setAdapter(adapter);
                                 }
                             });
                         } else {
@@ -132,7 +134,7 @@ public class MainActivity extends AppCompatActivity {
                         int currentWeekNum = CourseDataManager.getCurrentWeek(MainActivity.this);
                         adapter.setCurrentWeek(currentWeekNum);
                     } catch (Exception e) {
-                        CustomToast.showShortToast(MainActivity.this, "加载课程表失败");
+                        //
                     }
                 });
             }
@@ -243,22 +245,30 @@ public class MainActivity extends AppCompatActivity {
             showSchoolSelectorDialog(tvSchoolSelector, selectedSchool, selectedSchoolName);
         });
 
+        // 账号下拉图标点击事件
+        ImageView ivAccountDropdown = view.findViewById(R.id.iv_account_dropdown);
+        ivAccountDropdown.setOnClickListener(v -> {
+            showAccountListDialog(etUsername, etPassword, tvSchoolSelector, selectedSchool, selectedSchoolName);
+        });
+
         // 密码显示/隐藏切换 - 默认加密显示
         final boolean[] isPasswordVisible = {false}; // 移到外部，默认false表示加密显示
         // 设置初始状态为加密显示
         etPassword.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-        Switch switchPasswordToggle = view.findViewById(R.id.switch_password_toggle);
-        switchPasswordToggle.setChecked(false); // 默认不选中表示加密显示
+        ImageView ivPasswordToggle = view.findViewById(R.id.iv_password_toggle);
+        ivPasswordToggle.setImageResource(R.drawable.ic_eye_closed); // 默认显示闭眼图标
         
-        switchPasswordToggle.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (isChecked) {
-                // 切换为显示
-                etPassword.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
-                isPasswordVisible[0] = true;
-            } else {
+        ivPasswordToggle.setOnClickListener(v -> {
+            if (isPasswordVisible[0]) {
                 // 切换为隐藏
                 etPassword.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+                ivPasswordToggle.setImageResource(R.drawable.ic_eye_closed);
                 isPasswordVisible[0] = false;
+            } else {
+                // 切换为显示
+                etPassword.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
+                ivPasswordToggle.setImageResource(R.drawable.ic_eye_open);
+                isPasswordVisible[0] = true;
             }
             // 保持光标位置
             etPassword.setSelection(etPassword.getText().length());
@@ -332,6 +342,105 @@ public class MainActivity extends AppCompatActivity {
         }
         
         schoolDialog.show();
+    }
+
+    // 新增方法：显示多账号列表弹窗
+    private void showAccountListDialog(EditText etUsername, EditText etPassword, TextView tvSchoolSelector, String[] selectedSchool, String[] selectedSchoolName) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.DialogTheme);
+        View view = LayoutInflater.from(this).inflate(R.layout.dialog_account_list, null);
+        
+        LinearLayout accountListContainer = view.findViewById(R.id.account_list_container);
+        AlertDialog accountDialog = builder.setView(view).create();
+        
+        // 获取多账号列表
+        MultiAccountManager accountManager = new MultiAccountManager(this);
+        List<MultiAccountManager.AccountInfo> accountList = accountManager.getAccountList();
+        
+        if (accountList.isEmpty()) {
+            // 如果没有保存的账号，显示提示信息
+            TextView emptyTextView = new TextView(this);
+            emptyTextView.setText("暂无保存的账号");
+            emptyTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
+            emptyTextView.setTextColor(getResources().getColor(R.color.edit_text_tip_color));
+            emptyTextView.setGravity(Gravity.CENTER);
+            emptyTextView.setPadding(0, 40, 0, 40);
+            accountListContainer.addView(emptyTextView);
+        } else {
+            // 显示账号列表
+            for (MultiAccountManager.AccountInfo account : accountList) {
+                View accountItemView = LayoutInflater.from(this).inflate(R.layout.item_account, null);
+                
+                TextView tvUsername = accountItemView.findViewById(R.id.tv_username);
+                TextView tvSchoolName = accountItemView.findViewById(R.id.tv_school_name);
+                ImageButton btnDeleteAccount = accountItemView.findViewById(R.id.btn_delete_account);
+                
+                tvUsername.setText(account.getUsername());
+                tvSchoolName.setText(account.getSchoolName());
+                
+                // 账号项点击事件
+                accountItemView.setOnClickListener(v -> {
+                    // 填充账号密码到登录界面
+                    etUsername.setText(account.getUsername());
+                    etPassword.setText(account.getPassword());
+                    tvSchoolSelector.setText(account.getSchoolName());
+                    tvSchoolSelector.setTextColor(getResources().getColor(R.color.edit_text_color));
+                    selectedSchool[0] = account.getSchoolCode();
+                    selectedSchoolName[0] = account.getSchoolName();
+                    accountDialog.dismiss();
+                });
+                
+                // 删除按钮点击事件
+                btnDeleteAccount.setOnClickListener(v -> {
+                    // 检查是否删除的是当前登录的账号
+                    SharedPreferences loginPrefs = getSharedPreferences("LoginInfo", Context.MODE_PRIVATE);
+                    String currentUsername = loginPrefs.getString("username", "");
+                    String currentSchoolCode = loginPrefs.getString("schoolCode", "");
+                    
+                    // 检查是否删除的是当前登录界面显示的账号
+                    boolean isCurrentDisplayedAccount = account.getUsername().equals(etUsername.getText().toString()) && 
+                                                       account.getSchoolCode().equals(selectedSchool[0]);
+                    
+                    // 删除账号
+                    accountManager.deleteAccount(account.getUsername(), account.getSchoolCode());
+                    
+                    // 如果删除的是当前登录的账号，清除登录信息
+                    if (account.getUsername().equals(currentUsername) && account.getSchoolCode().equals(currentSchoolCode)) {
+                        loginPrefs.edit()
+                                .remove("username")
+                                .remove("password")
+                                .remove("schoolCode")
+                                .remove("schoolName")
+                                .apply();
+                    }
+                    
+                    // 如果删除的是当前登录界面显示的账号，清空输入框
+                    if (isCurrentDisplayedAccount) {
+                        etUsername.setText("");
+                        etPassword.setText("");
+                        tvSchoolSelector.setText("选择学校");
+                        tvSchoolSelector.setTextColor(getResources().getColor(R.color.edit_text_tip_color));
+                        selectedSchool[0] = null;
+                        selectedSchoolName[0] = null;
+                    }
+                    
+                    // 刷新列表
+                    accountListContainer.removeView(accountItemView);
+                    if (accountListContainer.getChildCount() == 0) {
+                        TextView emptyTextView = new TextView(this);
+                        emptyTextView.setText("暂无保存的账号");
+                        emptyTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
+                        emptyTextView.setTextColor(getResources().getColor(R.color.edit_text_tip_color));
+                        emptyTextView.setGravity(Gravity.CENTER);
+                        emptyTextView.setPadding(0, 40, 0, 40);
+                        accountListContainer.addView(emptyTextView);
+                    }
+                });
+                
+                accountListContainer.addView(accountItemView);
+            }
+        }
+        
+        accountDialog.show();
     }
 
     // 修改登录处理方法

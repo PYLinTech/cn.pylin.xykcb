@@ -68,7 +68,7 @@
         android:layout_height="wrap_content"
         android:text="取消"
         android:textSize="18sp"
-        android:background="@drawable/button_background_suggest"
+        android:background="@drawable/button_background_neutral"
         android:textColor="@color/button_text_color" />
 
 </LinearLayout>
