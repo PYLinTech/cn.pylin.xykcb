@@ -43,6 +43,8 @@ public class LoginManager {
     private String schoolCode;
     // 标志变量：记录是否已经尝试过网络更新
     private boolean hasAttemptedUpdate = false;
+    // 标志变量：记录是否已经显示过首次获取课程的提示
+    private boolean hasShownFirstCoursePrompt = false;
 
     // 登录类型枚举
     public enum LoginType {
@@ -107,6 +109,8 @@ public class LoginManager {
 
         // 重置更新标志，确保每次登录都是一个新的会话状态
         hasAttemptedUpdate = false;
+        // 重置首次获取课程提示标志，确保每次应用运行时都能显示提示
+        hasShownFirstCoursePrompt = false;
         
         this.schoolCode = schoolCode;
         LoginType loginType = LoginType.fromCode(schoolCode);
@@ -246,10 +250,6 @@ public class LoginManager {
                 
                 List<List<Course>> weeklyCourses = CourseDataManager.parseCourseData(localCourseList);
                 callback.onCourseDataReceived(weeklyCourses);
-                // 只有在已经尝试过网络更新但失败的情况下才显示本地数据提示
-                if (hasAttemptedUpdate) {
-                    notifyError("当前查看的是本地数据");
-                }
             } else {
                 notifyError("正在尝试更新数据...");
             }
@@ -532,14 +532,8 @@ public class LoginManager {
                             // 设置标志表示已经尝试过网络更新
                             hasAttemptedUpdate = true;
                             
-                            if (!courseContentsAreEqual(existingCourseList, newCourseList)) {
-                                sharedPreferences.edit().putString("CourseList", newCourseList).apply();
-                                // 课程数据已更新，显示提示
-                                notifyError("已更新到最新数据");
-                            } else {
-                                // 数据没有变化，显示提示
-                                notifyError("当前已是最新数据");
-                            }
+                            // 直接保存新的课程数据，不进行比对
+                            sharedPreferences.edit().putString("CourseList", newCourseList).apply();
 
                             List<List<Course>> weeklyCourses = CourseDataManager.parseCourseData(newCourseList);
                             // 设置当前周次
@@ -548,6 +542,13 @@ public class LoginManager {
                             if (!token.isEmpty()) {
                                 getCurrentWeekFromApi(token);
                             }
+                            
+                            // 如果是应用运行后第一次成功获取课程数据，显示提示
+                            if (!hasShownFirstCoursePrompt) {
+                                hasShownFirstCoursePrompt = true;
+                                showFirstCoursePrompt();
+                            }
+                            
                             callback.onCourseDataReceived(weeklyCourses);
                         }
                     } catch (Exception e) {
@@ -560,9 +561,7 @@ public class LoginManager {
         });
     }
 
-    private boolean courseContentsAreEqual(String data1, String data2) {
-        return data1.equals(data2);
-    }
+
     
     /**
      * 从系统获取当前周次（湖南工学院内网登录使用）
@@ -592,6 +591,15 @@ public class LoginManager {
     private void notifyError(String message) {
         new Handler(Looper.getMainLooper()).post(() -> {
             callback.onError(message);
+        });
+    }
+    
+    /**
+     * 显示首次获取课程数据的提示
+     */
+    private void showFirstCoursePrompt() {
+        new Handler(Looper.getMainLooper()).post(() -> {
+            CustomToast.showShortToast(context, "当前是最新课程数据");
         });
     }
 }

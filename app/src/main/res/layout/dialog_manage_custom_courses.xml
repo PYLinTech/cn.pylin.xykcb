@@ -33,7 +33,7 @@
                 android:layout_height="180dp"
                 android:background="@drawable/edit_text_background"
                 android:layout_marginBottom="10dp"
-                android:scrollbars="none" />
+                android:scrollbars="vertical" />
 
             <!-- 无课程提示 -->
             <TextView
