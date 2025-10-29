@@ -1,4 +1,3 @@
-// CourseAdapter.java
 package cn.pylin.xykcb;
 
 import android.app.AlertDialog;
@@ -26,6 +25,7 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -377,6 +377,11 @@ public class CourseAdapter extends RecyclerView.Adapter<CourseAdapter.CourseView
 
                 if (displayCourse != null) {
                     String courseName = displayCourse.getCourseName();
+                    // 检查是否为自定义课程
+                    boolean isCustomCourse = courseName.contains("(自定义)") || displayCourse.getLocation().contains("(自定义)");
+                    if (isCustomCourse) {
+                        courseName = courseName + " (自定义)";
+                    }
                     String shortenedName = courseName;
                     int visualLength = getVisualLength(courseName);
                     if (visualLength > 9) {
@@ -436,7 +441,7 @@ public class CourseAdapter extends RecyclerView.Adapter<CourseAdapter.CourseView
                     if (courseCount > 1) {
                         dayViews[day].setBadgeVisible(true);
                         // 可以根据课程颜色设置角标颜色
-                        dayViews[day].setBadgeColor(0xFFFF5252); // 或者使用课程的主色调
+                        dayViews[day].setBadgeColor(ContextCompat.getColor(context, R.color.red)); // 使用color/red资源
                     } else {
                         dayViews[day].setBadgeVisible(false);
                     }
@@ -499,9 +504,16 @@ public class CourseAdapter extends RecyclerView.Adapter<CourseAdapter.CourseView
                     TypedValue.COMPLEX_UNIT_DIP, 10, context.getResources().getDisplayMetrics()));
                 courseInfoLayout.setLayoutParams(layoutParams);
             
-                // 课程名称
+                // 课程名称和类型标识
                 TextView courseNameView = new TextView(context);
-                courseNameView.setText(course.getCourseName());
+                String courseName = course.getCourseName();
+                // 检查是否为自定义课程（通过检查是否有自定义课程的特殊标识）
+                boolean isCustomCourse = courseName.contains("(自定义)") || course.getLocation().contains("(自定义)");
+                if (isCustomCourse) {
+                    courseNameView.setText(courseName + " (自定义)");
+                } else {
+                    courseNameView.setText(courseName);
+                }
                 courseNameView.setTextSize(18);
                 courseNameView.setTextColor(ContextCompat.getColor(context, R.color.dialog_title_color));
                 courseNameView.setTypeface(null, Typeface.BOLD);
@@ -526,7 +538,15 @@ public class CourseAdapter extends RecyclerView.Adapter<CourseAdapter.CourseView
             
                 // 周次 - 增加左边距
                 TextView timeView = new TextView(context);
-                timeView.setText("周次：" + course.getclassWeek());
+                // 使用classWeekDetails显示准确的周次信息，并优化显示格式
+                String weekInfo;
+                if (course.classWeekDetails != null && !course.classWeekDetails.isEmpty()) {
+                    // 将逗号分隔的周次数字转换为友好的显示格式
+                    weekInfo = formatWeekDetails(course.classWeekDetails);
+                } else {
+                    weekInfo = course.getclassWeek();
+                }
+                timeView.setText("周次：" + weekInfo);
                 timeView.setTextSize(16);
                 timeView.setTextColor(ContextCompat.getColor(context, R.color.info_text_color));
                 timeView.setPadding(48, 4, 12, 12); // 左边距从12增加到24
@@ -665,6 +685,72 @@ public class CourseAdapter extends RecyclerView.Adapter<CourseAdapter.CourseView
                 btnAllWeeks.setBackgroundResource(R.drawable.tag_button_normal);
                 btnAllWeeks.setTextColor(ContextCompat.getColor(context, R.color.dialog_title_color));
             }
+        }
+        
+        /**
+         * 将逗号分隔的周次数字转换为友好的显示格式
+         * 例如："2,3,4,6,7,8" -> "2-4、6-8"
+         * "2,4,5,6" -> "2、4-6"
+         */
+        private String formatWeekDetails(String weekDetails) {
+            if (weekDetails == null || weekDetails.isEmpty()) {
+                return "";
+            }
+            
+            // 解析周次数字
+            String[] weekArray = weekDetails.split(",");
+            List<Integer> weeks = new ArrayList<>();
+            for (String weekStr : weekArray) {
+                try {
+                    weeks.add(Integer.parseInt(weekStr.trim()));
+                } catch (NumberFormatException e) {
+                    // 忽略无效数字
+                }
+            }
+            
+            if (weeks.isEmpty()) {
+                return "";
+            }
+            
+            // 排序周次
+            Collections.sort(weeks);
+            
+            StringBuilder result = new StringBuilder();
+            int start = weeks.get(0);
+            int end = weeks.get(0);
+            
+            for (int i = 1; i < weeks.size(); i++) {
+                if (weeks.get(i) == end + 1) {
+                    // 连续数字，扩展范围
+                    end = weeks.get(i);
+                } else {
+                    // 不连续，添加当前范围
+                    if (result.length() > 0) {
+                        result.append("、");
+                    }
+                    if (start == end) {
+                        result.append(start);
+                    } else {
+                        result.append(start).append("-").append(end);
+                    }
+                    
+                    // 开始新的范围
+                    start = weeks.get(i);
+                    end = weeks.get(i);
+                }
+            }
+            
+            // 添加最后一个范围
+            if (result.length() > 0) {
+                result.append("、");
+            }
+            if (start == end) {
+                result.append(start);
+            } else {
+                result.append(start).append("-").append(end);
+            }
+            
+            return result.toString();
         }
     }
 }

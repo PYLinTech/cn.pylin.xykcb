@@ -10,21 +10,15 @@ import android.icu.util.Calendar;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-
-import cn.pylin.xykcb.CustomToast;
-
 import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.RecyclerView;
-
 import org.json.JSONObject;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -32,7 +26,6 @@ import java.io.InputStream;
 import java.util.Date;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
-
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.OkHttpClient;
@@ -172,33 +165,7 @@ public class UpdateManager {
             callback.onUpdateCheckComplete();
         }
     }
-    
-    private void updateWeekDates(Date firstDate, SharedPreferences sp) {
-        SharedPreferences.Editor editor = sp.edit();
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(firstDate);
-    
-        int maxWeeks = 24;
-        for (int week = 1; week <= maxWeeks; week++) {
-            StringBuilder weekData = new StringBuilder();
-            for (int i = 0; i < 7; i++) {
-                Date date = calendar.getTime();
-                String dateStr = new SimpleDateFormat("M.d", Locale.getDefault()).format(date);
-                weekData.append(dateStr);
-                if (i < 6) {
-                    weekData.append(",");
-                }
-                calendar.add(Calendar.DAY_OF_YEAR, 1);
-            }
-            editor.putString(String.valueOf(week), weekData.toString());
-        }
-        editor.apply();
-        
-        if (recyclerView != null && recyclerView.getAdapter() != null) {
-            recyclerView.getAdapter().notifyDataSetChanged();
-        }
-    }
-    
+
     private void showUpdateDialog(String downloadUrl, String updateDescription, int currentVersionCode) {
         AlertDialog.Builder builder = new AlertDialog.Builder(context, R.style.DialogTheme);
         View view = LayoutInflater.from(context).inflate(R.layout.dialog_update, null);

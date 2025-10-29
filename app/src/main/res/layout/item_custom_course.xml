@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:background="@drawable/edit_text_background"
+    android:padding="14dp"
+    android:layout_marginBottom="4dp">
+
+    <!-- 课程信息区域 -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:layout_marginEnd="24dp"
+        android:orientation="vertical"
+        android:gravity="center_vertical">
+
+        <!-- 课程名称 -->
+        <TextView
+            android:id="@+id/tv_course_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="课程名称"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@color/dialog_title_color"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:layout_marginBottom="4dp" />
+
+        <!-- 时间信息 -->
+        <TextView
+            android:id="@+id/tv_time_info"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="时间信息"
+            android:textSize="12sp"
+            android:textColor="@color/info_text_color"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:layout_marginBottom="2dp" />
+
+        <!-- 地点和教师信息 -->
+        <TextView
+            android:id="@+id/tv_location_teacher"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="地点和教师"
+            android:textSize="12sp"
+            android:textColor="@color/edit_text_tip_color"
+            android:maxLines="1"
+            android:ellipsize="end" />
+
+    </LinearLayout>
+
+    <!-- 操作按钮区域 -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        android:layout_marginEnd="10dp"
+        android:gravity="center_vertical">
+
+        <!-- 编辑按钮 -->
+        <ImageView
+            android:id="@+id/btn_edit"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginEnd="10dp"
+            android:src="@drawable/ic_edit"
+            android:contentDescription="编辑"
+            android:tint="@color/blue"
+            android:background="?android:attr/selectableItemBackgroundBorderless" />
+
+        <!-- 删除按钮 -->
+        <ImageView
+            android:id="@+id/btn_delete"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginStart="10dp"
+            android:src="@drawable/ic_delete"
+            android:contentDescription="删除"
+            android:tint="@color/red"
+            android:background="?android:attr/selectableItemBackgroundBorderless" />
+
+    </LinearLayout>
+
+</LinearLayout>

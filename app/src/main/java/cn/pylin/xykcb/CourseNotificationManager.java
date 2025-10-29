@@ -67,8 +67,8 @@ public class CourseNotificationManager {
         int targetTotalMinutes = hour * 60 + minute;
         int timeDiffMinutes = Math.abs(currentTotalMinutes - targetTotalMinutes);
         
-        // 检查是否接近设定时间（半小时内）
-        if (timeDiffMinutes <= 30) {
+        // 检查是否接近设定时间（十五分钟内）
+        if (timeDiffMinutes <= 15) {
             // 检查上一次通知时间
             long lastNotificationTime = prefs.getLong(PREF_LAST_NOTIFICATION_TIME, 0);
             long currentTime = System.currentTimeMillis();
@@ -162,8 +162,10 @@ public class CourseNotificationManager {
         // 获取当前周次
         int currentWeek = CourseDataManager.getCurrentWeek(context);
         
-        // 获取所有课程数据
-        List<List<Course>> weeklyCourses = CourseDataManager.parseCourseData(context);
+        // 获取标准课程数据
+        List<List<Course>> standardCourses = CourseDataManager.parseCourseData(context);
+        // 合并标准课程和自定义课程
+        List<List<Course>> weeklyCourses = CourseDataManager.getMergedCourses(context, standardCourses);
         
         // 获取明天的课程列表
         if (tomorrowDay >= 1 && tomorrowDay <= weeklyCourses.size()) {

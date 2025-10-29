@@ -9,10 +9,10 @@ android {
 
     defaultConfig {
         applicationId = "cn.pylin.xykcb"
-        minSdk = 24
+        minSdk = 30
         targetSdk = 35
-        versionCode = 251019
-        versionName = "3.5.2"
+        versionCode = 251029
+        versionName = "3.6.1"
     }
 
     buildTypes {

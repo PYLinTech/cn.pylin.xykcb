@@ -1,11 +1,14 @@
 package cn.pylin.xykcb;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
+import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -35,7 +38,6 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -50,6 +52,7 @@ public class MainActivity extends AppCompatActivity {
     private LoginManager loginManager;
     private UpdateManager updateManager;
     private Switch switchDailyCourseReminder; // 添加为成员变量，解决作用域问题
+    private CustomCourseUpdateReceiver customCourseUpdateReceiver; // 自定义课程更新广播接收器
     
 
 
@@ -101,10 +104,13 @@ public class MainActivity extends AppCompatActivity {
                         String[] weekHeaders = new String[] { "周一", "周二", "周三", "周四", "周五", "周六", "周日" };
                         // 使用基于日期判断的周次，确保本地数据也能显示正确周次
                         Week = String.valueOf(CourseDataManager.getCurrentWeek(MainActivity.this));
+                        
+                        // 合并标准课程和自定义课程
+                        List<List<Course>> mergedCourses = CourseDataManager.getMergedCourses(MainActivity.this, weeklyCourses);
 
                         if (adapter == null) {
                             // 首次创建adapter
-                            adapter = new CourseAdapter(MainActivity.this, weeklyCourses, weekHeaders);
+                            adapter = new CourseAdapter(MainActivity.this, mergedCourses, weekHeaders);
                             recyclerView.setAdapter(adapter);
                             
                             recyclerView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
@@ -119,7 +125,7 @@ public class MainActivity extends AppCompatActivity {
                             });
                         } else {
                             // 复用现有adapter，更新数据
-                            adapter.updateCourses(weeklyCourses);
+                            adapter.updateCourses(mergedCourses);
                         }
                         
                         // 获取并设置当前周次
@@ -151,6 +157,9 @@ public class MainActivity extends AppCompatActivity {
 
         initNoteEditText();
         checkLoginStatus();
+        
+        // 注册自定义课程更新广播接收器
+        registerCustomCourseUpdateReceiver();
     }
 
     private void initNoteEditText() {
@@ -641,12 +650,18 @@ public class MainActivity extends AppCompatActivity {
             showLoginDialog();
             dialog.dismiss();
         });
-    
+
+        // 管理自定义课程按钮事件
+        Button btnManageCustomCourses = dialogView.findViewById(R.id.btn_manage_custom_courses);
+        btnManageCustomCourses.setOnClickListener(v -> {
+            // 显示管理自定义课程弹窗
+            showManageCustomCoursesDialog();
+        });
+
         // "关于"页面按钮事件
         btnPYLinTech.setOnClickListener(v -> {
             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.pylin.cn/xykcb"));
             startActivity(intent);
-            dialog.dismiss();
         });
     
         // 在showToolbarTitleDialog方法中修改
@@ -693,7 +708,12 @@ public class MainActivity extends AppCompatActivity {
                 clipboard.setPrimaryClip(clip);
                 CustomToast.showShortToast(this, "未能跳转到QQ，已复制群号到剪贴板");
             }
-            dialog.dismiss();
+        });
+
+        // 创建桌面小组件按钮点击事件
+        View layoutCreateWidget = layoutSettings.findViewById(R.id.layout_create_widget);
+        layoutCreateWidget.setOnClickListener(v -> {
+            createDesktopWidget();
         });
     }
 
@@ -713,6 +733,13 @@ public class MainActivity extends AppCompatActivity {
         refreshWidget();
         // 检查更新
         updateManager.checkForUpdates();
+    }
+    
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // 取消注册自定义课程更新广播接收器
+        unregisterCustomCourseUpdateReceiver();
     }
 
     @Override
@@ -840,6 +867,35 @@ public class MainActivity extends AppCompatActivity {
         return appWidgetIds.length;
     }
 
+    /**
+     * 创建桌面小组件
+     */
+    private void createDesktopWidget() {
+        // 检查Android版本是否支持requestPinAppWidget方法（Android 8.0+）
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this);
+            ComponentName appWidget = new ComponentName(this, CourseWidgetProvider.class);
+            
+            // 检查小组件是否可用
+            if (appWidgetManager.isRequestPinAppWidgetSupported()) {
+                // 创建PinAppWidget请求
+                Intent pinnedWidgetCallbackIntent = new Intent(this, MainActivity.class);
+                PendingIntent successCallback = PendingIntent.getActivity(
+                    this, 0, pinnedWidgetCallbackIntent, 
+                    PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+                );
+                
+                // 请求固定小组件
+                appWidgetManager.requestPinAppWidget(appWidget, null, successCallback);
+                CustomToast.showShortToast(this, "添加失败，请长按桌面进行添加");
+            } else {
+                CustomToast.showShortToast(this, "添加失败，请长按桌面进行添加");
+            }
+        } else {
+            CustomToast.showShortToast(this, "添加失败，请长按桌面进行添加");
+        }
+    }
+
     private void refreshWidget() {
         // 发送广播刷新小组件
         Intent intent = new Intent(this, CourseWidgetProvider.class);
@@ -859,6 +915,66 @@ public class MainActivity extends AppCompatActivity {
             CourseWidgetProvider widgetProvider = new CourseWidgetProvider();
             widgetProvider.onUpdate(this, appWidgetManager, appWidgetIds);
         }
+    }
+
+    /**
+     * 注册自定义课程更新广播接收器
+     */
+    @SuppressLint("UnspecifiedRegisterReceiverFlag")
+    private void registerCustomCourseUpdateReceiver() {
+        if (customCourseUpdateReceiver == null) {
+            customCourseUpdateReceiver = new CustomCourseUpdateReceiver();
+            IntentFilter filter = new IntentFilter("CUSTOM_COURSE_UPDATED");
+            // 为Android 15+添加包名过滤器，确保广播只在应用内传递
+            filter.addCategory(getPackageName());
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                registerReceiver(customCourseUpdateReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
+            } else {
+                registerReceiver(customCourseUpdateReceiver, filter);
+            }
+        }
+    }
+    
+    /**
+     * 取消注册自定义课程更新广播接收器
+     */
+    private void unregisterCustomCourseUpdateReceiver() {
+        if (customCourseUpdateReceiver != null) {
+            try {
+                unregisterReceiver(customCourseUpdateReceiver);
+                customCourseUpdateReceiver = null;
+            } catch (IllegalArgumentException e) {
+                // 接收器可能已经被取消注册，忽略异常
+            }
+        }
+    }
+    
+    /**
+     * 自定义课程更新广播接收器
+     */
+    private class CustomCourseUpdateReceiver extends android.content.BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if ("CUSTOM_COURSE_UPDATED".equals(intent.getAction())) {
+                // 收到自定义课程更新通知，刷新课程表
+                refreshCourseTable();
+            }
+        }
+    }
+    
+    /**
+     * 刷新课程表数据
+     */
+    void refreshCourseTable() {
+        if (loginManager != null) {
+            // 重新加载课程数据
+            loginManager.loadLocalCourseData();
+        }
+    }
+
+    private void showManageCustomCoursesDialog() {
+        CustomCourseManagementDialog dialog = new CustomCourseManagementDialog(this);
+        dialog.show();
     }
 
 }

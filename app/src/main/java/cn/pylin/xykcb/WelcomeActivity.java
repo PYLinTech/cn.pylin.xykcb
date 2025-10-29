@@ -1,7 +1,6 @@
 package cn.pylin.xykcb;
 
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
@@ -12,7 +11,6 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.viewpager2.widget.ViewPager2;
@@ -50,6 +48,31 @@ public class WelcomeActivity extends AppCompatActivity {
         setupClickListeners();
         
     }
+
+    private long backPressedTime = 0;
+    
+    @Override
+    public void onBackPressed() {
+        // 检查是否从设置页面进入
+        boolean fromSettings = getIntent().getBooleanExtra("from_settings", false);
+        
+        if (fromSettings) {
+            // 如果是从设置页面进入，按返回键直接返回到设置页面
+            super.onBackPressed();
+            return;
+        }
+        
+        // 如果不是从设置页面进入，实现按两次退出功能
+        if (backPressedTime + 2000 > System.currentTimeMillis()) {
+            // 第二次按返回键，退出应用
+            super.onBackPressed();
+            return;
+        } else {
+            // 第一次按返回键，显示提示
+            CustomToast.showShortToast(this, "再按一次返回将退出");
+        }
+        backPressedTime = System.currentTimeMillis();
+    }
     
     private boolean isFirstLaunch() {
         SharedPreferences prefs = getSharedPreferences("AppSettings", Context.MODE_PRIVATE);
@@ -62,12 +85,7 @@ public class WelcomeActivity extends AppCompatActivity {
         SharedPreferences prefs = getSharedPreferences("AppSettings", Context.MODE_PRIVATE);
         prefs.edit().putInt("introVersion", INTRO_VERSION).apply();
     }
-    
-    private void setIntroRejected() {
-        SharedPreferences prefs = getSharedPreferences("AppSettings", Context.MODE_PRIVATE);
-        prefs.edit().putInt("introVersion", 0).apply();
-    }
-    
+
     private void initViews() {
         viewPager = findViewById(R.id.viewPager);
         dotsLayout = findViewById(R.id.dotsLayout);
@@ -157,9 +175,18 @@ public class WelcomeActivity extends AppCompatActivity {
     }
     
     private void startMainActivity() {
-        Intent intent = new Intent(this, MainActivity.class);
-        startActivity(intent);
-        finish();
+        // 检查是否从设置页面进入
+        boolean fromSettings = getIntent().getBooleanExtra("from_settings", false);
+        
+        if (fromSettings) {
+            // 如果是从设置页面进入，直接关闭当前Activity
+            finish();
+        } else {
+            // 如果不是从设置页面进入，启动MainActivity
+            Intent intent = new Intent(this, MainActivity.class);
+            startActivity(intent);
+            finish();
+        }
     }
     
     private void showPrivacyPolicyDialog() {

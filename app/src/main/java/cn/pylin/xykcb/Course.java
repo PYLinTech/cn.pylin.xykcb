@@ -1,4 +1,3 @@
-// Course.java
 package cn.pylin.xykcb;
 
 import java.util.ArrayList;

@@ -1,9 +1,6 @@
 package cn.pylin.xykcb;
 
-import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
@@ -11,12 +8,9 @@ import android.provider.Settings;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.TextView;
-
-import androidx.appcompat.app.AppCompatActivity;
 
 /**
  * 自定义Toast工具类，用于替代系统Toast
@@ -243,16 +237,5 @@ public class CustomToast {
                 mToastMessage = null;
             }
         }
-    }
-
-    /**
-     * 立即取消所有Toast显示
-     */
-    public static void cancelAll() {
-        if (mHideToastRunnable != null) {
-            mHandler.removeCallbacks(mHideToastRunnable);
-            mHideToastRunnable = null;
-        }
-        hideToast();
     }
 }
