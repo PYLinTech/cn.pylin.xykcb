@@ -140,16 +140,11 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onError(String message) {
                 runOnUiThread(() -> {
-                    // 如果消息包含"当前查看的是本地数据"，说明已经加载了本地数据，不需要显示登录对话框
-                    if (message.contains("当前查看的是本地数据")) {
-                        CustomToast.showLongToast(MainActivity.this, message);
-                    } else {
-                        CustomToast.showShortToast(MainActivity.this, message);
-                        
-                        // 如果错误消息包含"登录失败"或"登录过期"，重新拉起登录窗口
-                        if (message.contains("登录失败") || message.contains("暂不支持")) {
-                            showLoginDialog();
-                        }
+                    CustomToast.showShortToast(MainActivity.this, message);
+                    
+                    // 如果错误消息包含"登录失败"或"登录过期"，重新拉起登录窗口
+                    if (message.contains("登录失败") || message.contains("暂不支持")) {
+                        showLoginDialog();
                     }
                 });
             }

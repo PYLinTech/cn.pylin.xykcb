@@ -184,10 +184,9 @@ public class CustomCourseManagementDialog {
                 }
             }
         } else {
-            // 如果没有指定周次，默认显示所有周（1-24周）
-            for (int week = 1; week <= 24; week++) {
-                weekList.add(week);
-            }
+            // 如果没有指定周次，默认显示当前周次
+            int currentWeek = CourseDataManager.getCurrentWeek(context);
+            weekList.add(currentWeek);
         }
         course.setWeeks(weekList);
         
@@ -441,10 +440,9 @@ public class CustomCourseManagementDialog {
                 }
             }
         } else {
-            // 如果没有指定周次，默认显示所有周（1-24周）
-            for (int week = 1; week <= 24; week++) {
-                weekList.add(week);
-            }
+            // 如果没有指定周次，默认显示当前周次
+            int currentWeek = CourseDataManager.getCurrentWeek(context);
+            weekList.add(currentWeek);
         }
         course.setWeeks(weekList);
         

@@ -42,6 +42,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="请输入课程名称（必填）"
+            android:textSize="16sp"
             android:background="@drawable/edit_text_background"
             android:padding="12dp"
             android:layout_marginBottom="12dp" />
@@ -60,6 +61,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="请输入上课地点（选填）"
+            android:textSize="16sp"
             android:background="@drawable/edit_text_background"
             android:padding="12dp"
             android:layout_marginBottom="12dp" />
@@ -78,6 +80,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="请输入教师姓名（选填）"
+            android:textSize="16sp"
             android:background="@drawable/edit_text_background"
             android:padding="12dp"
             android:layout_marginBottom="12dp" />
@@ -103,6 +106,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="周一"
+                android:textSize="12sp"
                 android:layout_marginEnd="4dp"
                 android:background="@drawable/tag_button_normal" />
 
@@ -112,6 +116,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="周二"
+                android:textSize="12sp"
                 android:layout_marginEnd="4dp"
                 android:background="@drawable/tag_button_normal" />
 
@@ -121,6 +126,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="周三"
+                android:textSize="12sp"
                 android:layout_marginEnd="4dp"
                 android:background="@drawable/tag_button_normal" />
 
@@ -130,6 +136,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="周四"
+                android:textSize="12sp"
                 android:layout_marginEnd="4dp"
                 android:background="@drawable/tag_button_normal" />
 
@@ -139,6 +146,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="周五"
+                android:textSize="12sp"
                 android:layout_marginEnd="4dp"
                 android:background="@drawable/tag_button_normal" />
 
@@ -148,6 +156,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="周六"
+                android:textSize="12sp"
                 android:layout_marginEnd="4dp"
                 android:background="@drawable/tag_button_normal" />
 
@@ -157,6 +166,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="周日"
+                android:textSize="12sp"
                 android:background="@drawable/tag_button_normal" />
         </LinearLayout>
 
@@ -181,6 +191,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="第一大节"
+                android:textSize="12sp"
                 android:layout_marginEnd="4dp"
                 android:background="@drawable/tag_button_normal" />
 
@@ -190,6 +201,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="第二大节"
+                android:textSize="12sp"
                 android:layout_marginEnd="4dp"
                 android:background="@drawable/tag_button_normal" />
 
@@ -199,6 +211,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="第三大节"
+                android:textSize="12sp"
                 android:layout_marginEnd="4dp"
                 android:background="@drawable/tag_button_normal" />
 
@@ -208,6 +221,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="第四大节"
+                android:textSize="12sp"
                 android:layout_marginEnd="4dp"
                 android:background="@drawable/tag_button_normal" />
 
@@ -217,6 +231,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="第五大节"
+                android:textSize="12sp"
                 android:background="@drawable/tag_button_normal" />
         </LinearLayout>
 
@@ -234,6 +249,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="请填写数字（不填写默认为当前周次）"
+            android:textSize="16sp"
             android:background="@drawable/edit_text_background"
             android:padding="12dp"
             android:layout_marginBottom="12dp" />

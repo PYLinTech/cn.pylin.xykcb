@@ -182,8 +182,13 @@ public class WelcomeActivity extends AppCompatActivity {
             // 如果是从设置页面进入，直接关闭当前Activity
             finish();
         } else {
-            // 如果不是从设置页面进入，启动MainActivity
+            // 如果不是从设置页面进入，先判断是否存在MainActivity实例
             Intent intent = new Intent(this, MainActivity.class);
+            
+            // 设置标志，确保不会创建新的MainActivity实例
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            
+            // 启动MainActivity，如果已存在则调起显示，没有再新建
             startActivity(intent);
             finish();
         }

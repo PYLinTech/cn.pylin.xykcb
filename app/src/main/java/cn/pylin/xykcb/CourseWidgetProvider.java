@@ -169,10 +169,12 @@ public class CourseWidgetProvider extends AppWidgetProvider {
                     clickCount = 0;
                     lastClickTime = 0;
                     
-                    // 启动主页面
-                    Intent launchIntent = new Intent(context, WelcomeActivity.class);
-                    launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                    context.startActivity(launchIntent);
+                    // 启动主页面，像点击应用图标那样启动，避免多个界面
+                    Intent launchIntent = context.getPackageManager().getLaunchIntentForPackage(context.getPackageName());
+                    if (launchIntent != null) {
+                        launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                        context.startActivity(launchIntent);
+                    }
                     return; // 不执行刷新操作
                 }
             } else {
