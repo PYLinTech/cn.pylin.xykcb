@@ -303,6 +303,23 @@ public class LoginManager {
         editor.putString("password", password);
         editor.putString("schoolCode", schoolCode);
         editor.apply();
+        
+        // 保存到多账号列表
+        MultiAccountManager accountManager = new MultiAccountManager(context);
+        String schoolName = getSchoolNameByCode(schoolCode);
+        accountManager.saveAccount(username, password, schoolCode, schoolName);
+    }
+    
+    /**
+     * 根据学校代码获取学校名称
+     */
+    private String getSchoolNameByCode(String schoolCode) {
+        for (LoginType loginType : LoginType.values()) {
+            if (loginType.getCode().equals(schoolCode)) {
+                return loginType.getName();
+            }
+        }
+        return "未知学校";
     }
 
     /**
