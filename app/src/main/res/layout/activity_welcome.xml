@@ -37,7 +37,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_margin="30dp"
-                    android:background="@drawable/button_background"
+                    android:background="@drawable/button_background_suggest"
                     android:text="下一步"
                     android:textColor="@color/white"
                     android:textSize="18sp" />
@@ -47,7 +47,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_margin="30dp"
-                    android:background="@drawable/button_background"
+                    android:background="@drawable/button_background_suggest"
                     android:text="开始使用"
                     android:textColor="@color/white"
                     android:textSize="18sp"

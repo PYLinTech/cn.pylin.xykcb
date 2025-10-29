@@ -5,12 +5,9 @@ import android.content.SharedPreferences;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Base64;
-import android.util.Log;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
@@ -21,10 +18,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
-
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Cookie;
@@ -41,7 +36,6 @@ import okhttp3.ResponseBody;
  * 登录管理器类 - 合并了所有学校的登录逻辑
  */
 public class LoginManager {
-    private static final String TAG = "LoginManager";
     private final Context context;
     private final CourseDataCallback callback;
     private OkHttpClient httpClient;
@@ -227,73 +221,7 @@ public class LoginManager {
         });
     }
 
-    /**
-     * 湖南工学院内网登录
-     */
-    private void performHnitBLogin(String username, String password) {
-        httpClient = new OkHttpClient.Builder()
-                .cookieJar(new CookieJar() {
-                    private final Map<String, List<Cookie>> cookieStore = new HashMap<>();
-
-                    @Override
-                    public void saveFromResponse(HttpUrl url, List<Cookie> cookies) {
-                        cookieStore.put(url.host(), cookies);
-                    }
-
-                    @Override
-                    public List<Cookie> loadForRequest(HttpUrl url) {
-                        List<Cookie> cookies = cookieStore.get(url.host());
-                        return cookies != null ? cookies : new ArrayList<>();
-                    }
-                })
-                .connectTimeout(10, TimeUnit.SECONDS)
-                .readTimeout(10, TimeUnit.SECONDS)
-                .writeTimeout(10, TimeUnit.SECONDS)
-                .build();
-
-        new Thread(() -> {
-            try {
-                Request initialRequest = new Request.Builder()
-                        .url("https://jwxt.hnit.edu.cn/jsxsd/")
-                        .build();
-
-                try (Response initialResponse = httpClient.newCall(initialRequest).execute()) {
-                    if (!initialResponse.isSuccessful()) {
-                        throw new IOException("初始请求失败: " + initialResponse.code());
-                    }
-                }
-
-                String encoded = prepareEncodedValue(username, password);
-                RequestBody formBody = new FormBody.Builder()
-                        .add("loginMethod", "LoginToXk")
-                        .add("userAccount", username)
-                        .add("userPassword", "")
-                        .add("encoded", encoded)
-                        .build();
-
-                Request loginRequest = new Request.Builder()
-                        .url("https://jwxt.hnit.edu.cn/jsxsd/xk/LoginToXk")
-                        .post(formBody)
-                        .build();
-
-                try (Response loginResponse = httpClient.newCall(loginRequest).execute()) {
-                    if (!loginResponse.isSuccessful()) {
-                        throw new IOException("登录请求失败: " + loginResponse.code());
-                    }
-                }
-
-                getCurrentWeekFromSystem();
-                getCourseSchedule();
-
-            } catch (IOException e) {
-            }
-        }).start();
-    }
-
-    /**
-     * 加载本地课程数据
-     */
-    private void loadLocalCourseData() {
+    void loadLocalCourseData() {
         try {
             SharedPreferences sharedPreferences = context.getSharedPreferences("CourseListInfo", Context.MODE_PRIVATE);
             String localCourseList = sharedPreferences.getString("CourseList", "");
@@ -433,26 +361,6 @@ public class LoginManager {
         });
     }
 
-    /**
-     * 获取当前周次
-     */
-    public void getWeek() {
-        // 获取保存的token
-        SharedPreferences sharedPreferences = context.getSharedPreferences("LoginInfo", Context.MODE_PRIVATE);
-        String token = sharedPreferences.getString("token", "");
-        
-        if (!token.isEmpty()) {
-            getCurrentWeekFromApi(token);
-        } else {
-            // token为空时，使用默认值
-            currentWeek = "1";
-            notifyError("未找到有效token，使用默认周次");
-        }
-    }
-
-    /**
-     * 通过API获取当前周次
-     */
     private void getCurrentWeekFromApi(String token) {
         String teachingWeekUrl = "https://jw.hnit.edu.cn/njwhd/teachingWeek?token=" + token;
 
@@ -527,8 +435,8 @@ public class LoginManager {
             
             SimpleDateFormat sdf = new SimpleDateFormat("M.d", Locale.getDefault());
             
-            // 计算并保存每周的日期范围（假设总共有20周）
-            for (int week = 1; week <= 20; week++) {
+            // 计算并保存每周的日期范围（支持1-24周）
+            for (int week = 1; week <= 24; week++) {
                 Calendar weekStart = (Calendar) firstWeekMonday.clone();
                 weekStart.add(Calendar.DAY_OF_MONTH, (week - 1) * 7);
                 Calendar weekEnd = (Calendar) weekStart.clone();
@@ -652,21 +560,6 @@ public class LoginManager {
         });
     }
 
-    /**
-     * 准备加密值（湖南工学院内网登录使用）
-     */
-    private String prepareEncodedValue(String username, String password) {
-        try {
-            String combined = username + "%%%" + password;
-            return Base64.encodeToString(combined.getBytes(StandardCharsets.UTF_8), Base64.DEFAULT).trim();
-        } catch (Exception e) {
-            return "";
-        }
-    }
-
-    /**
-     * 比较两个课程数据字符串是否相同
-     */
     private boolean courseContentsAreEqual(String data1, String data2) {
         return data1.equals(data2);
     }
@@ -696,260 +589,9 @@ public class LoginManager {
         }
     }
 
-    /**
-     * 获取课程表（湖南工学院内网登录使用）
-     */
-    private void getCourseSchedule() throws IOException {
-        Request scheduleRequest = new Request.Builder()
-                .url("https://jwxt.hnit.edu.cn/jsxsd/xskb/xskb_list.do")
-                .build();
-
-        try (Response scheduleResponse = httpClient.newCall(scheduleRequest).execute()) {
-            if (!scheduleResponse.isSuccessful()) {
-                throw new IOException("获取课表失败: " + scheduleResponse.code());
-            }
-
-            String htmlContent = scheduleResponse.body().string();
-            JSONObject jsonData = parseHtmlToJson(htmlContent);
-
-            if (jsonData != null) {
-                JSONObject standardData = convertToStandardFormat(jsonData);
-                
-                SharedPreferences sharedPreferences = context.getSharedPreferences("CourseListInfo", Context.MODE_PRIVATE);
-                String existingData = sharedPreferences.getString("CourseList", "");
-
-                // 设置标志表示已经尝试过网络更新
-                hasAttemptedUpdate = true;
-                
-                if (!courseContentsAreEqual(existingData, standardData.toString())) {
-                    sharedPreferences.edit()
-                            .putString("CourseList", standardData.toString())
-                            .apply();
-                    notifyError("已更新到最新数据");
-                } else {
-                    // 数据没有变化，显示提示
-                    notifyError("当前已是最新数据");
-                }
-
-                // 设置当前周次
-                getCurrentWeekFromSystem();
-                
-                List<List<Course>> weeklyCourses = CourseDataManager.parseCourseData(standardData.toString());
-                callback.onCourseDataReceived(weeklyCourses);
-            } else {
-                throw new IOException("解析课表HTML失败");
-            }
-        } catch (JSONException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    /**
-     * 解析HTML为JSON（湖南工学院内网登录使用）
-     */
-    private JSONObject parseHtmlToJson(String html) {
-        try {
-            JSONObject jsonData = new JSONObject();
-            JSONArray dataArray = new JSONArray();
-
-            JSONArray dateArray = parseDates(html);
-
-            int startIndex = html.indexOf("<table id=\"kbtable\" ");
-            if (startIndex == -1) return null;
-
-            int endIndex = html.indexOf("</table>", startIndex);
-            if (endIndex == -1) return null;
-
-            String tableHtml = html.substring(startIndex, endIndex);
-            String[] rows = tableHtml.split("<tr>");
-
-            JSONArray itemArray = new JSONArray();
-
-            for (int i = 2; i < rows.length; i++) {
-                String row = rows[i];
-                String[] cells = row.split("<td[^>]*>");
-
-                String timeSlot = extractText(cells[1]).replaceAll("\\s+", "");
-
-                for (int day = 2; day <= 8; day++) {
-                    if (day >= cells.length) continue;
-
-                    String cellContent = cells[day];
-                    if (cellContent.contains("kbcontent")) {
-                        String[] courses = cellContent.split("<div class=\"kbcontent\">");
-
-                        for (int c = 1; c < courses.length; c++) {
-                            String courseHtml = courses[c].split("</div>")[0];
-                            JSONObject course = parseCourse(courseHtml, timeSlot, day - 1);
-                            if (course != null) {
-                                itemArray.put(course);
-                            }
-                        }
-                    }
-                }
-            }
-
-            JSONObject dataObject = new JSONObject();
-            dataObject.put("item", itemArray);
-            dataObject.put("date", dateArray);
-            dataArray.put(dataObject);
-
-            jsonData.put("data", dataArray);
-            return jsonData;
-
-        } catch (JSONException e) {
-            return null;
-        }
-    }
-
-    /**
-     * 解析日期（湖南工学院内网登录使用）
-     */
-    private JSONArray parseDates(String html) throws JSONException {
-        JSONArray dateArray = new JSONArray();
-        int startIndex = html.indexOf("<table id=\"kbtable\" ");
-        if (startIndex == -1) return dateArray;
-
-        int endIndex = html.indexOf("</table>", startIndex);
-        if (endIndex == -1) return dateArray;
-
-        String tableHtml = html.substring(startIndex, endIndex);
-        String[] rows = tableHtml.split("<tr>");
-        if (rows.length < 2) return dateArray;
-
-        String headerRow = rows[1];
-        String[] headers = headerRow.split("<th[^>]*>");
-
-        for (int i = 2; i < headers.length && i <= 8; i++) {
-            String header = headers[i];
-            String dateText = extractText(header).trim();
-
-            JSONObject dateObj = new JSONObject();
-            dateObj.put("xqmc", "星期" + (i - 1));
-            dateObj.put("date", dateText.split("\\s+")[0]);
-
-            dateArray.put(dateObj);
-        }
-
-        return dateArray;
-    }
-
-    /**
-     * 解析课程信息（湖南工学院内网登录使用）
-     */
-    private JSONObject parseCourse(String courseHtml, String timeSlot, int weekday) throws JSONException {
-        try {
-            String[] parts = courseHtml.split("<br>");
-            if (parts.length < 4) return null;
-
-            String courseName = extractText(parts[0]).trim();
-            String teacher = extractText(parts[1]).replace("教师:", "").trim();
-            String location = extractText(parts[2]).replace("地点:", "").trim();
-            String weekRange = extractText(parts[3]).replace("周次:", "").trim();
-
-            String classTime = "第" + timeSlot.split("-")[0] + "-" + timeSlot.split("-")[1] + "节";
-            String maxClassTime = getMaxClassTime(timeSlot);
-
-            JSONObject course = new JSONObject();
-            course.put("courseName", courseName);
-            course.put("teacherName", teacher);
-            course.put("location", location);
-            course.put("classWeek", weekRange);
-            course.put("classTime", weekday + classTime);
-            course.put("maxClassTime", maxClassTime);
-
-            String weekDetails = generateWeekDetails(weekRange);
-            course.put("classWeekDetails", weekDetails);
-
-            return course;
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    /**
-     * 提取文本（湖南工学院内网登录使用）
-     */
-    private String extractText(String html) {
-        // 简单的HTML标签移除
-        return html.replaceAll("<[^>]*>", "")
-                .replaceAll("&nbsp;", " ")
-                .trim();
-    }
-
-    /**
-     * 获取最大课时（湖南工学院内网登录使用）
-     */
-    private String getMaxClassTime(String timeSlot) {
-        String[] parts = timeSlot.split("-");
-        if (parts.length < 2) return "第一大节";
-
-        int start = Integer.parseInt(parts[0]);
-        int end = Integer.parseInt(parts[1]);
-
-        if (start == 1 && end == 2) return "第一大节";
-        else if (start == 3 && end == 4) return "第二大节";
-        else if (start == 5 && end == 6) return "第三大节";
-        else if (start == 7 && end == 8) return "第四大节";
-        else if (start == 9 && end == 10) return "第五大节";
-        else return "第一大节";
-    }
-
-    /**
-     * 生成周次详情（湖南工学院内网登录使用）
-     */
-    private String generateWeekDetails(String weekRange) {
-        StringBuilder details = new StringBuilder(",");
-        
-        // 这里可以根据具体的周次格式解析，这里是简单示例
-        if (weekRange.contains(",")) {
-            String[] weeks = weekRange.split(",");
-            for (String week : weeks) {
-                try {
-                    details.append(Integer.parseInt(week)).append(",");
-                } catch (NumberFormatException ignored) {}
-            }
-        } else if (weekRange.contains("-")) {
-            String[] parts = weekRange.split("-");
-            try {
-                int start = Integer.parseInt(parts[0]);
-                int end = Integer.parseInt(parts[1].replaceAll("\\D", ""));
-                
-                for (int i = start; i <= end; i++) {
-                    details.append(i).append(",");
-                }
-            } catch (NumberFormatException ignored) {}
-        } else {
-            try {
-                details.append(Integer.parseInt(weekRange)).append(",");
-            } catch (NumberFormatException ignored) {}
-        }
-        
-        return details.toString();
-    }
-
-    /**
-     * 转换为标准格式（湖南工学院内网登录使用）
-     */
-    private JSONObject convertToStandardFormat(JSONObject jsonData) throws JSONException {
-        // 这里根据标准格式进行转换
-        // 由于我们已经在parseCourseData中处理了格式，这里可能不需要额外转换
-        return jsonData;
-    }
-
-    /**
-     * 通知错误
-     */
     private void notifyError(String message) {
         new Handler(Looper.getMainLooper()).post(() -> {
             callback.onError(message);
         });
-    }
-
-    /**
-     * 获取当前周次
-     */
-    public String getCurrentWeek() {
-        return currentWeek;
     }
 }

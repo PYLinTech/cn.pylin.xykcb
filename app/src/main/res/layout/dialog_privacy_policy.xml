@@ -83,7 +83,7 @@
         android:layout_marginBottom="10dp"
         android:text="同意并进入"
         android:textSize="18sp"
-        android:background="@drawable/button_background"
+        android:background="@drawable/button_background_suggest"
         android:textColor="@color/button_text_color" />
 
     <Button
@@ -93,8 +93,7 @@
         android:layout_marginBottom="5dp"
         android:text="不同意并退出"
         android:textSize="18sp"
-        android:background="@drawable/button_background"
-        android:textColor="@color/white"
-        android:backgroundTint="@color/gray" />
+        android:background="@drawable/button_background_neutral"
+        android:textColor="@color/white" />
 
 </LinearLayout>

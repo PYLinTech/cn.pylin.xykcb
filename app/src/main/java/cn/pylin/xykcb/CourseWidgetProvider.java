@@ -1,4 +1,3 @@
-// CourseWidgetProvider.java
 package cn.pylin.xykcb;
 
 import android.app.PendingIntent;

@@ -1,4 +1,3 @@
-// CourseDataManager.java
 package cn.pylin.xykcb;
 
 import android.content.Context;
@@ -111,5 +110,30 @@ public class CourseDataManager {
                 .replace("(语音室)", "")
                 .replace("（语音室）", "")
                 .trim();
+    }
+
+    // 新增方法：合并标准课程和自定义课程
+    public static List<List<Course>> getMergedCourses(Context context, List<List<Course>> standardCourses) {
+        List<List<Course>> customCourses = CustomCourseManager.getCustomCoursesAsCourseList(context);
+        
+        // 合并课程数据
+        List<List<Course>> mergedCourses = new ArrayList<>();
+        for (int i = 0; i < 7; i++) {
+            List<Course> dayCourses = new ArrayList<>();
+            
+            // 添加标准课程
+            if (i < standardCourses.size()) {
+                dayCourses.addAll(standardCourses.get(i));
+            }
+            
+            // 添加自定义课程
+            if (i < customCourses.size()) {
+                dayCourses.addAll(customCourses.get(i));
+            }
+            
+            mergedCourses.add(dayCourses);
+        }
+        
+        return mergedCourses;
     }
 }

@@ -162,8 +162,10 @@ public class CourseNotificationManager {
         // 获取当前周次
         int currentWeek = CourseDataManager.getCurrentWeek(context);
         
-        // 获取所有课程数据
-        List<List<Course>> weeklyCourses = CourseDataManager.parseCourseData(context);
+        // 获取标准课程数据
+        List<List<Course>> standardCourses = CourseDataManager.parseCourseData(context);
+        // 合并标准课程和自定义课程
+        List<List<Course>> weeklyCourses = CourseDataManager.getMergedCourses(context, standardCourses);
         
         // 获取明天的课程列表
         if (tomorrowDay >= 1 && tomorrowDay <= weeklyCourses.size()) {

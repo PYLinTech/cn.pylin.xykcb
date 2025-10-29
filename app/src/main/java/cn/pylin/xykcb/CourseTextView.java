@@ -7,6 +7,7 @@ import android.graphics.Path;
 import android.graphics.RectF;
 import android.util.AttributeSet;
 import android.util.TypedValue;
+import androidx.core.content.ContextCompat;
 
 public class CourseTextView extends androidx.appcompat.widget.AppCompatTextView {
     private boolean showBadge = false;
@@ -35,7 +36,7 @@ public class CourseTextView extends androidx.appcompat.widget.AppCompatTextView 
     private void init() {
         // 初始化画笔
         badgePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        badgePaint.setColor(0xFFFF5252); // 红色角标
+        badgePaint.setColor(ContextCompat.getColor(getContext(), R.color.red)); // 使用color/red资源
         badgePaint.setStyle(Paint.Style.FILL);
         
         // 阴影画笔
@@ -71,17 +72,7 @@ public class CourseTextView extends androidx.appcompat.widget.AppCompatTextView 
             invalidate();
         }
     }
-    
-    public void setBadgeSize(float sizeDp) {
-        badgeSize = TypedValue.applyDimension(
-            TypedValue.COMPLEX_UNIT_DIP, sizeDp, 
-            getContext().getResources().getDisplayMetrics()
-        );
-        if (showBadge) {
-            invalidate();
-        }
-    }
-    
+
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);

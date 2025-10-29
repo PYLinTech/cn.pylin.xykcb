@@ -1,4 +1,3 @@
-// CourseWidgetService.java
 package cn.pylin.xykcb;
 
 import android.content.Context;
@@ -27,21 +26,30 @@ class CourseRemoteViewsFactory implements RemoteViewsService.RemoteViewsFactory 
         this.appWidgetId = intent.getIntExtra("appWidgetId", 0);
         this.weekOffset = intent.getIntExtra("weekOffset", 0);
         this.currentWeek = CourseDataManager.getCurrentWeek(context) + weekOffset;
-        this.weeklyCourses = CourseDataManager.parseCourseData(context);
+        // 获取标准课程数据
+        List<List<Course>> standardCourses = CourseDataManager.parseCourseData(context);
+        // 合并标准课程和自定义课程
+        this.weeklyCourses = CourseDataManager.getMergedCourses(context, standardCourses);
     }
 
     @Override
     public void onCreate() {
         // 更新数据源
         this.currentWeek = CourseDataManager.getCurrentWeek(context) + weekOffset;
-        this.weeklyCourses = CourseDataManager.parseCourseData(context);
+        // 获取标准课程数据
+        List<List<Course>> standardCourses = CourseDataManager.parseCourseData(context);
+        // 合并标准课程和自定义课程
+        this.weeklyCourses = CourseDataManager.getMergedCourses(context, standardCourses);
     }
 
     @Override
     public void onDataSetChanged() {
         // 更新数据源
         this.currentWeek = CourseDataManager.getCurrentWeek(context) + weekOffset;
-        this.weeklyCourses = CourseDataManager.parseCourseData(context);
+        // 获取标准课程数据
+        List<List<Course>> standardCourses = CourseDataManager.parseCourseData(context);
+        // 合并标准课程和自定义课程
+        this.weeklyCourses = CourseDataManager.getMergedCourses(context, standardCourses);
         
         // 从SharedPreferences获取最新的weekOffset
         android.content.SharedPreferences prefs = context.getSharedPreferences("CourseWidgetPrefs", Context.MODE_PRIVATE);
