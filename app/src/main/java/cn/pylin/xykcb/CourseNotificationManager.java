@@ -131,7 +131,7 @@ public class CourseNotificationManager {
         
         // 创建通知
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
-                .setSmallIcon(R.mipmap.ic_launcher_foreground)
+                .setSmallIcon(R.mipmap.ic_launcher)
                 .setContentTitle("明天的课程")
                 .setContentText(content)
                 .setStyle(new NotificationCompat.BigTextStyle().bigText(content))
