@@ -98,6 +98,9 @@ public class MainActivity extends AppCompatActivity {
         // 初始化更新管理器
         updateManager = new UpdateManager(this, recyclerView);
 
+        // 在登录之前创建空白的课程列表UI
+        createEmptyCourseListUI();
+
         // 然后初始化登录管理器
         loginManager = new LoginManager(this, new LoginManager.CourseDataCallback() {
             @Override
@@ -193,6 +196,55 @@ public class MainActivity extends AppCompatActivity {
             }
             return false;
         });
+    }
+
+    /**
+     * 在登录之前创建空白的课程列表UI
+     */
+    private void createEmptyCourseListUI() {
+        // 使用异步任务创建空白的课程列表UI
+        new Thread(() -> {
+            // 模拟异步操作，确保UI在主线程更新
+            try {
+                Thread.sleep(100); // 短暂延迟，确保UI组件已初始化
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            
+            runOnUiThread(() -> {
+                try {
+                    // 创建空的课程数据（7天的空列表）
+                    List<List<Course>> emptyCourses = new ArrayList<>();
+                    for (int i = 0; i < 7; i++) {
+                        emptyCourses.add(new ArrayList<>());
+                    }
+                    
+                    String[] weekHeaders = new String[] { "周一", "周二", "周三", "周四", "周五", "周六", "周日" };
+                    Week = "1"; // 默认显示第一周
+                    
+                    // 获取RecyclerView的高度，然后创建adapter
+                    recyclerView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+                        @Override
+                        public void onGlobalLayout() {
+                            recyclerView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                            int recyclerViewHeight = recyclerView.getHeight() - recyclerView.getPaddingTop() - recyclerView.getPaddingBottom();
+                            
+                            // 创建空的课程适配器
+                            adapter = new CourseAdapter(MainActivity.this, emptyCourses, weekHeaders);
+                            adapter.setRecyclerViewHeight(recyclerViewHeight);
+                            adapter.setCurrentWeek(1); // 设置当前周次为第一周
+                            recyclerView.setAdapter(adapter);
+                            
+                            // 显示提示信息
+                            CustomToast.showShortToast(MainActivity.this, "请登录以加载课程数据");
+                        }
+                    });
+                } catch (Exception e) {
+                    // 如果出现异常，确保UI不会崩溃
+                    e.printStackTrace();
+                }
+            });
+        }).start();
     }
 
     private void checkLoginStatus() {
