@@ -98,11 +98,10 @@ public class MainActivity extends AppCompatActivity {
         // 初始化更新管理器
         updateManager = new UpdateManager(this, recyclerView);
 
-        // 在登录之前创建空白的课程列表UI
-        createEmptyCourseListUI();
-
-        // 然后初始化登录管理器
-        loginManager = new LoginManager(this, new LoginManager.CourseDataCallback() {
+        // 在登录之前创建空白的课程列表UI，完成后初始化登录管理器
+        createEmptyCourseListUI(() -> {
+            // UI创建完成后初始化登录管理器
+            loginManager = new LoginManager(this, new LoginManager.CourseDataCallback() {
             @Override
             public void onCourseDataReceived(List<List<Course>> weeklyCourses) {
                 runOnUiThread(() -> {
@@ -155,11 +154,12 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        initNoteEditText();
-        checkLoginStatus();
-        
-        // 注册自定义课程更新广播接收器
-        registerCustomCourseUpdateReceiver();
+            initNoteEditText();
+            checkLoginStatus();
+            
+            // 注册自定义课程更新广播接收器
+            registerCustomCourseUpdateReceiver();
+        });
     }
 
     private void initNoteEditText() {
@@ -201,7 +201,7 @@ public class MainActivity extends AppCompatActivity {
     /**
      * 在登录之前创建空白的课程列表UI
      */
-    private void createEmptyCourseListUI() {
+    private void createEmptyCourseListUI(Runnable onComplete) {
         // 使用异步任务创建空白的课程列表UI
         new Thread(() -> {
             // 模拟异步操作，确保UI在主线程更新
@@ -234,14 +234,20 @@ public class MainActivity extends AppCompatActivity {
                             adapter.setRecyclerViewHeight(recyclerViewHeight);
                             adapter.setCurrentWeek(1); // 设置当前周次为第一周
                             recyclerView.setAdapter(adapter);
-                            
-                            // 显示提示信息
-                            CustomToast.showShortToast(MainActivity.this, "请登录以加载课程数据");
+
+                            // UI创建完成后调用回调函数
+                            if (onComplete != null) {
+                                onComplete.run();
+                            }
                         }
                     });
                 } catch (Exception e) {
                     // 如果出现异常，确保UI不会崩溃
                     e.printStackTrace();
+                    // 即使出现异常也调用回调函数
+                    if (onComplete != null) {
+                        onComplete.run();
+                    }
                 }
             });
         }).start();
@@ -663,46 +669,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         // 初始化用户信息
-        SharedPreferences sharedPreferences = getSharedPreferences("LoginInfo", Context.MODE_PRIVATE);
-        String savedUsername = sharedPreferences.getString("username", "");
-        String userName = sharedPreferences.getString("userName", "");
-        String academyName = sharedPreferences.getString("academyName", "");
-        String className = sharedPreferences.getString("className", "");
-        
-        tvDescription.setText("学号：" + savedUsername);
-        
-        // 动态显示用户信息
-        boolean hasUserInfo = false;
-        if (!userName.isEmpty()) {
-            tvUserName.setText("姓名：" + userName);
-            tvUserName.setVisibility(View.VISIBLE);
-            hasUserInfo = true;
-        } else {
-            tvUserName.setVisibility(View.GONE);
-        }
-        
-        if (!academyName.isEmpty()) {
-            tvAcademyName.setText("学院：" + academyName);
-            tvAcademyName.setVisibility(View.VISIBLE);
-            hasUserInfo = true;
-        } else {
-            tvAcademyName.setVisibility(View.GONE);
-        }
-        
-        if (!className.isEmpty()) {
-            tvClassName.setText("班级：" + className);
-            tvClassName.setVisibility(View.VISIBLE);
-            hasUserInfo = true;
-        } else {
-            tvClassName.setVisibility(View.GONE);
-        }
-        
-        // 如果有用户信息，则显示用户信息区域
-        if (hasUserInfo) {
-            layoutUserInfo.setVisibility(View.VISIBLE);
-        } else {
-            layoutUserInfo.setVisibility(View.GONE);
-        }
+        updateUserInfoDisplay(tvDescription, tvUserName, tvAcademyName, tvClassName, layoutUserInfo);
     
         // 动态获取并设置版本信息
         try {
@@ -1131,6 +1098,61 @@ public class MainActivity extends AppCompatActivity {
     private void showManageCustomCoursesDialog() {
         CustomCourseManagementDialog dialog = new CustomCourseManagementDialog(this);
         dialog.show();
+    }
+
+    /**
+     * 更新用户信息显示，从LoginManager的运行时变量读取
+     */
+    private void updateUserInfoDisplay(TextView tvDescription, TextView tvUserName, 
+                                      TextView tvAcademyName, TextView tvClassName, 
+                                      LinearLayout layoutUserInfo) {
+        // 从SharedPreferences读取用户名，从LoginManager运行时变量读取其他用户信息
+        SharedPreferences sharedPreferences = getSharedPreferences("LoginInfo", Context.MODE_PRIVATE);
+        String savedUsername = sharedPreferences.getString("username", "");
+        String userName = "";
+        String academyName = "";
+        String className = "";
+        
+        if (loginManager != null) {
+            userName = loginManager.getRuntimeUserName();
+            academyName = loginManager.getRuntimeAcademyName();
+            className = loginManager.getRuntimeClassName();
+        }
+        
+        tvDescription.setText("学号：" + savedUsername);
+        
+        // 动态显示用户信息
+        boolean hasUserInfo = false;
+        if (!userName.isEmpty()) {
+            tvUserName.setText("姓名：" + userName);
+            tvUserName.setVisibility(View.VISIBLE);
+            hasUserInfo = true;
+        } else {
+            tvUserName.setVisibility(View.GONE);
+        }
+        
+        if (!academyName.isEmpty()) {
+            tvAcademyName.setText("学院：" + academyName);
+            tvAcademyName.setVisibility(View.VISIBLE);
+            hasUserInfo = true;
+        } else {
+            tvAcademyName.setVisibility(View.GONE);
+        }
+        
+        if (!className.isEmpty()) {
+            tvClassName.setText("班级：" + className);
+            tvClassName.setVisibility(View.VISIBLE);
+            hasUserInfo = true;
+        } else {
+            tvClassName.setVisibility(View.GONE);
+        }
+        
+        // 如果有用户信息，则显示用户信息区域
+        if (hasUserInfo) {
+            layoutUserInfo.setVisibility(View.VISIBLE);
+        } else {
+            layoutUserInfo.setVisibility(View.GONE);
+        }
     }
 
 }
