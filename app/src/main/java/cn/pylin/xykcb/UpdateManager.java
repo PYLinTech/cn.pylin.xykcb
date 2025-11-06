@@ -86,10 +86,8 @@ public class UpdateManager {
             public void onFailure(Call call, IOException e) {
                 e.printStackTrace();
                 new Handler(Looper.getMainLooper()).post(() -> {
-                    String errorMsg = "检查更新失败";
-                    CustomToast.showShortToast(context, errorMsg);
                     if (callback != null) {
-                        callback.onError(errorMsg);
+                        callback.onError("检查更新失败");
                     }
                 });
             }
@@ -103,19 +101,15 @@ public class UpdateManager {
                             parseAndHandleResponse(responseBody, callback);
                         } catch (Exception e) {
                             e.printStackTrace();
-                            String errorMsg = "解析响应失败：" + e.getMessage();
-                            CustomToast.showShortToast(context, errorMsg);
                             if (callback != null) {
-                                callback.onError(errorMsg);
+                                callback.onError("解析响应失败：" + e.getMessage());
                             }
                         }
                     });
                 } else {
                     new Handler(Looper.getMainLooper()).post(() -> {
-                        String errorMsg = "检查更新失败";
-                        CustomToast.showShortToast(context, errorMsg);
                         if (callback != null) {
-                            callback.onError(errorMsg);
+                            callback.onError("检查更新失败");
                         }
                     });
                 }

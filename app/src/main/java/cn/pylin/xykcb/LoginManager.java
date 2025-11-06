@@ -227,9 +227,6 @@ public class LoginManager {
                             } else if (msg.contains("错误")) {
                                 // 账号或密码错误
                                 notifyError("登录失败：该帐号不存在或密码错误");
-                            } else if (msg.contains("失败")) {
-                                // 登录失败
-                                notifyError("登录失败：登录失败");
                             } else {
                                 // 其他未知情况
                                 notifyError("登录失败：服务器返回异常");
