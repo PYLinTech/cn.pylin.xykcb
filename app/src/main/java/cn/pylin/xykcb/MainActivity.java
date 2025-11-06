@@ -98,10 +98,11 @@ public class MainActivity extends AppCompatActivity {
         // 初始化更新管理器
         updateManager = new UpdateManager(this, recyclerView);
 
-        // 在登录之前创建空白的课程列表UI，完成后初始化登录管理器
-        createEmptyCourseListUI(() -> {
-            // UI创建完成后初始化登录管理器
-            loginManager = new LoginManager(this, new LoginManager.CourseDataCallback() {
+        // 在登录之前创建空白的课程列表UI
+        createEmptyCourseListUI();
+
+        // 然后初始化登录管理器
+        loginManager = new LoginManager(this, new LoginManager.CourseDataCallback() {
             @Override
             public void onCourseDataReceived(List<List<Course>> weeklyCourses) {
                 runOnUiThread(() -> {
@@ -154,12 +155,11 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-            initNoteEditText();
-            checkLoginStatus();
-            
-            // 注册自定义课程更新广播接收器
-            registerCustomCourseUpdateReceiver();
-        });
+        initNoteEditText();
+        checkLoginStatus();
+        
+        // 注册自定义课程更新广播接收器
+        registerCustomCourseUpdateReceiver();
     }
 
     private void initNoteEditText() {
@@ -201,56 +201,37 @@ public class MainActivity extends AppCompatActivity {
     /**
      * 在登录之前创建空白的课程列表UI
      */
-    private void createEmptyCourseListUI(Runnable onComplete) {
-        // 使用异步任务创建空白的课程列表UI
-        new Thread(() -> {
-            // 模拟异步操作，确保UI在主线程更新
-            try {
-                Thread.sleep(100); // 短暂延迟，确保UI组件已初始化
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+    private void createEmptyCourseListUI() {
+        // 直接在主线程中创建空白的课程列表UI
+        try {
+            // 创建空的课程数据（7天的空列表）
+            List<List<Course>> emptyCourses = new ArrayList<>();
+            for (int i = 0; i < 7; i++) {
+                emptyCourses.add(new ArrayList<>());
             }
             
-            runOnUiThread(() -> {
-                try {
-                    // 创建空的课程数据（7天的空列表）
-                    List<List<Course>> emptyCourses = new ArrayList<>();
-                    for (int i = 0; i < 7; i++) {
-                        emptyCourses.add(new ArrayList<>());
-                    }
+            String[] weekHeaders = new String[] { "周一", "周二", "周三", "周四", "周五", "周六", "周日" };
+            Week = "1"; // 默认显示第一周
+            
+            // 获取RecyclerView的高度，然后创建adapter
+            recyclerView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+                @Override
+                public void onGlobalLayout() {
+                    recyclerView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                    int recyclerViewHeight = recyclerView.getHeight() - recyclerView.getPaddingTop() - recyclerView.getPaddingBottom();
                     
-                    String[] weekHeaders = new String[] { "周一", "周二", "周三", "周四", "周五", "周六", "周日" };
-                    Week = "1"; // 默认显示第一周
-                    
-                    // 获取RecyclerView的高度，然后创建adapter
-                    recyclerView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-                        @Override
-                        public void onGlobalLayout() {
-                            recyclerView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-                            int recyclerViewHeight = recyclerView.getHeight() - recyclerView.getPaddingTop() - recyclerView.getPaddingBottom();
-                            
-                            // 创建空的课程适配器
-                            adapter = new CourseAdapter(MainActivity.this, emptyCourses, weekHeaders);
-                            adapter.setRecyclerViewHeight(recyclerViewHeight);
-                            adapter.setCurrentWeek(1); // 设置当前周次为第一周
-                            recyclerView.setAdapter(adapter);
+                    // 创建空的课程适配器
+                    adapter = new CourseAdapter(MainActivity.this, emptyCourses, weekHeaders);
+                    adapter.setRecyclerViewHeight(recyclerViewHeight);
+                    adapter.setCurrentWeek(1); // 设置当前周次为第一周
+                    recyclerView.setAdapter(adapter);
 
-                            // UI创建完成后调用回调函数
-                            if (onComplete != null) {
-                                onComplete.run();
-                            }
-                        }
-                    });
-                } catch (Exception e) {
-                    // 如果出现异常，确保UI不会崩溃
-                    e.printStackTrace();
-                    // 即使出现异常也调用回调函数
-                    if (onComplete != null) {
-                        onComplete.run();
-                    }
                 }
             });
-        }).start();
+        } catch (Exception e) {
+            // 如果出现异常，确保UI不会崩溃
+            e.printStackTrace();
+        }
     }
 
     private void checkLoginStatus() {
