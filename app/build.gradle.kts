@@ -5,14 +5,14 @@ plugins {
 
 android {
     namespace = "cn.pylin.xykcb"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "cn.pylin.xykcb"
         minSdk = 30
-        targetSdk = 35
-        versionCode = 251030
-        versionName = "3.7.7"
+        targetSdk = 36
+        versionCode = 251106
+        versionName = "3.8.5"
     }
 
     buildTypes {
@@ -20,24 +20,28 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             isDebuggable = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
+            isJniDebuggable = false
         }
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+    buildFeatures {
+        viewBinding = false
+    }
+    dependenciesInfo {
+        includeInBundle = false
+        includeInApk = false
+    }
+    buildToolsVersion = "36.1.0"
 }
 
 dependencies {
-    compileOnly("com.google.code.findbugs:jsr305:3.0.2")
+    implementation(libs.appcompat)
+    implementation(libs.material)
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("org.jsoup:jsoup:1.16.1")
     implementation("androidx.recyclerview:recyclerview:1.4.0")
     implementation("androidx.viewpager2:viewpager2:1.0.0")
-    implementation(libs.appcompat)
-    implementation(libs.material)
 }

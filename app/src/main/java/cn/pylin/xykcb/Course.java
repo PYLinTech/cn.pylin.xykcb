@@ -64,10 +64,18 @@ public class Course {
             return true;
         }
         
-        // 检查课程是否在指定周数内，更健壮的实现方式
-        // 先确保前后有逗号，然后检查是否包含目标周数
-        String paddedDetails = "," + classWeekDetails + ",";
-        return paddedDetails.contains("," + week + ",");
+        // 按英文逗号分割周数字符串，然后精准匹配
+        String[] weekArray = classWeekDetails.split(",");
+        for (String weekStr : weekArray) {
+            try {
+                if (Integer.parseInt(weekStr.trim()) == week) {
+                    return true;
+                }
+            } catch (NumberFormatException e) {
+                // 忽略无效的周数格式
+            }
+        }
+        return false;
     }
 
     public boolean isInTimeSlot(int weekday, int timeSlot) {

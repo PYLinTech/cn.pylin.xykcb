@@ -45,6 +45,11 @@ public class LoginManager {
     private boolean hasAttemptedUpdate = false;
     // 标志变量：记录是否已经显示过首次获取课程的提示
     private boolean hasShownFirstCoursePrompt = false;
+    
+    // 运行时变量：存储登录用户信息
+    private String runtimeUserName = "";
+    private String runtimeAcademyName = "";
+    private String runtimeClassName = "";
 
     // 登录类型枚举
     public enum LoginType {
@@ -88,6 +93,21 @@ public class LoginManager {
     public interface CourseDataCallback {
         void onCourseDataReceived(List<List<Course>> weeklyCourses);
         void onError(String message);
+    }
+    
+    /**
+     * 获取运行时用户信息
+     */
+    public String getRuntimeUserName() {
+        return runtimeUserName;
+    }
+    
+    public String getRuntimeAcademyName() {
+        return runtimeAcademyName;
+    }
+    
+    public String getRuntimeClassName() {
+        return runtimeClassName;
     }
 
     public LoginManager(Context context, CourseDataCallback callback) {
@@ -188,15 +208,15 @@ public class LoginManager {
                                     SharedPreferences.Editor editor = sharedPreferences.edit();
                                     editor.putString("token", token);
                                     
-                                    // 保存用户信息
+                                    // 保存用户信息到运行时变量
                                     if (data.has("name")) {
-                                        editor.putString("userName", data.getString("name"));
+                                        runtimeUserName = data.getString("name");
                                     }
                                     if (data.has("academyName")) {
-                                        editor.putString("academyName", data.getString("academyName"));
+                                        runtimeAcademyName = data.getString("academyName");
                                     }
                                     if (data.has("clsName")) {
-                                        editor.putString("className", data.getString("clsName"));
+                                        runtimeClassName = data.getString("clsName");
                                     }
                                     editor.apply();
                                     
@@ -207,9 +227,6 @@ public class LoginManager {
                             } else if (msg.contains("错误")) {
                                 // 账号或密码错误
                                 notifyError("登录失败：该帐号不存在或密码错误");
-                            } else if (msg.contains("失败")) {
-                                // 登录失败
-                                notifyError("登录失败：登录失败");
                             } else {
                                 // 其他未知情况
                                 notifyError("登录失败：服务器返回异常");

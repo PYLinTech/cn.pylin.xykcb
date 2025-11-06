@@ -26,11 +26,17 @@ public class CourseDataManager {
 
         for (String key : weekPrefs.getAll().keySet()) {
             String dates = weekPrefs.getString(key, "");
-            if (dates != null && dates.contains(today)) {
-                try {
-                    return Integer.parseInt(key);
-                } catch (NumberFormatException e) {
-                    e.printStackTrace();
+            if (dates != null) {
+                // 按英文逗号分割日期字符串，然后精准匹配
+                String[] dateArray = dates.split(",");
+                for (String date : dateArray) {
+                    if (date.trim().equals(today)) {
+                        try {
+                            return Integer.parseInt(key);
+                        } catch (NumberFormatException e) {
+                            e.printStackTrace();
+                        }
+                    }
                 }
             }
         }
