@@ -149,6 +149,10 @@ public class MainActivity extends AppCompatActivity {
                     
                     // 如果错误消息包含"登录失败"或"登录过期"，重新拉起登录窗口
                     if (message.contains("登录失败") || message.contains("暂不支持")) {
+                        // 登录失败后将周次切换为全部周次（仅对"登录失败"生效）
+                        if (message.contains("登录失败") && adapter != null) {
+                            adapter.setShowAllWeeks(true);
+                        }
                         showLoginDialog();
                     }
                 });
